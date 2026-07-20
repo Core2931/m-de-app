@@ -1,9 +1,12 @@
+import type { Category } from "@/lib/categories";
+
 export interface Expense {
   id: string;
   date: string; // YYYY-MM-DD
   item: string;
   amount: number;
   remark: string;
+  category: Category;
   createdAt: string; // ISO timestamp
 }
 

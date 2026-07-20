@@ -2,19 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import GlassCard from "@/components/ui/GlassCard";
+import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import BottomNav from "@/components/layout/BottomNav";
+import CategoryPicker from "@/components/ui/CategoryPicker";
+import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
 import { todayISO } from "@/lib/formatters";
+import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 
 export default function NewExpensePage() {
   const router = useRouter();
   const add = useExpenseStore((s) => s.add);
   const [date, setDate] = useState(todayISO());
-  const [item, setItem] = useState("");
   const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY);
+  const [item, setItem] = useState("");
   const [remark, setRemark] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -33,8 +36,8 @@ export default function NewExpensePage() {
     }
     setSaving(true);
     try {
-      await add({ date, item: item.trim(), amount: amountNum, remark: remark.trim() });
-      router.push("/expenses");
+      await add({ date, item: item.trim(), amount: amountNum, remark: remark.trim(), category });
+      router.push("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ");
     } finally {
@@ -43,10 +46,10 @@ export default function NewExpensePage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col p-4 pb-28 max-w-md mx-auto w-full gap-4">
-      <h1 className="text-white text-xl font-semibold">เพิ่มรายจ่าย</h1>
+    <Screen>
+      <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">เพิ่มรายจ่าย</h1>
 
-      <GlassCard>
+      <Card className="rounded-[22px] p-[22px]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input label="วันที่" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
           <Input
@@ -61,22 +64,24 @@ export default function NewExpensePage() {
             autoFocus
             required
           />
+          <div className="flex flex-col gap-2">
+            <span className="text-[13px] font-medium text-sub">หมวดหมู่</span>
+            <CategoryPicker value={category} onChange={setCategory} />
+          </div>
           <Input
             label="รายการ"
             value={item}
             onChange={(e) => setItem(e.target.value)}
-            placeholder="เช่น ข้าวเช้า"
+            placeholder="เช่น ข้าวเที่ยง"
             required
           />
           <Input label="หมายเหตุ" value={remark} onChange={(e) => setRemark(e.target.value)} placeholder="(ถ้ามี)" />
-          {error && <p className="text-red-200 text-sm">{error}</p>}
-          <Button type="submit" disabled={saving} className="w-full justify-center">
+          {error && <p className="text-sm text-accent">{error}</p>}
+          <Button type="submit" disabled={saving} className="mt-1.5 w-full">
             {saving ? "กำลังบันทึก..." : "บันทึก"}
           </Button>
         </form>
-      </GlassCard>
-
-      <BottomNav />
-    </main>
+      </Card>
+    </Screen>
   );
 }

@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import GlassCard from "@/components/ui/GlassCard";
+import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import BottomNav from "@/components/layout/BottomNav";
+import CategoryPicker from "@/components/ui/CategoryPicker";
+import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
+import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 
 export default function EditExpensePage() {
   const params = useParams<{ id: string }>();
@@ -20,8 +22,9 @@ export default function EditExpensePage() {
   const expense = expenses.find((e) => e.id === params.id);
 
   const [date, setDate] = useState("");
-  const [item, setItem] = useState("");
   const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY);
+  const [item, setItem] = useState("");
   const [remark, setRemark] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -33,8 +36,9 @@ export default function EditExpensePage() {
   if (expense && !initialized) {
     setInitializedId(expense.id);
     setDate(expense.date);
-    setItem(expense.item);
     setAmount(String(expense.amount));
+    setCategory(expense.category);
+    setItem(expense.item);
     setRemark(expense.remark);
   }
 
@@ -52,7 +56,7 @@ export default function EditExpensePage() {
     }
     setSaving(true);
     try {
-      await update(params.id, { date, item: item.trim(), amount: amountNum, remark: remark.trim() });
+      await update(params.id, { date, item: item.trim(), amount: amountNum, remark: remark.trim(), category });
       router.push("/expenses");
     } catch (err) {
       setError(err instanceof Error ? err.message : "แก้ไขไม่สำเร็จ");
@@ -75,22 +79,24 @@ export default function EditExpensePage() {
 
   if (isLoaded && !expense) {
     return (
-      <main className="flex-1 flex flex-col items-center justify-center p-4 gap-3">
-        <p className="text-white">ไม่พบรายการ</p>
-        <Button variant="ghost" onClick={() => router.push("/expenses")}>
-          กลับไปหน้ารายการ
-        </Button>
-      </main>
+      <Screen>
+        <div className="flex flex-col items-center gap-3 py-20">
+          <p className="text-text">ไม่พบรายการ</p>
+          <Button variant="ghost" onClick={() => router.push("/expenses")}>
+            กลับไปหน้ารายการ
+          </Button>
+        </div>
+      </Screen>
     );
   }
 
   return (
-    <main className="flex-1 flex flex-col p-4 pb-28 max-w-md mx-auto w-full gap-4">
-      <h1 className="text-white text-xl font-semibold">แก้ไขรายจ่าย</h1>
+    <Screen>
+      <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">แก้ไขรายจ่าย</h1>
 
-      <GlassCard>
+      <Card className="rounded-[22px] p-[22px]">
         {!initialized ? (
-          <p className="text-white/50 text-sm">กำลังโหลด...</p>
+          <p className="text-sm text-sub">กำลังโหลด...</p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input label="วันที่" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -104,11 +110,15 @@ export default function EditExpensePage() {
               onChange={(e) => setAmount(e.target.value)}
               required
             />
+            <div className="flex flex-col gap-2">
+              <span className="text-[13px] font-medium text-sub">หมวดหมู่</span>
+              <CategoryPicker value={category} onChange={setCategory} />
+            </div>
             <Input label="รายการ" value={item} onChange={(e) => setItem(e.target.value)} required />
             <Input label="หมายเหตุ" value={remark} onChange={(e) => setRemark(e.target.value)} />
-            {error && <p className="text-red-200 text-sm">{error}</p>}
-            <div className="flex gap-3">
-              <Button type="submit" disabled={saving} className="flex-1 justify-center">
+            {error && <p className="text-sm text-accent">{error}</p>}
+            <div className="mt-1.5 flex gap-3">
+              <Button type="submit" disabled={saving} className="flex-1">
                 {saving ? "กำลังบันทึก..." : "บันทึก"}
               </Button>
               <Button type="button" variant="danger" disabled={saving} onClick={handleDelete}>
@@ -117,9 +127,7 @@ export default function EditExpensePage() {
             </div>
           </form>
         )}
-      </GlassCard>
-
-      <BottomNav />
-    </main>
+      </Card>
+    </Screen>
   );
 }

@@ -1,8 +1,9 @@
 import { google, sheets_v4 } from "googleapis";
 import type { Expense, NewExpense } from "@/types";
+import { toCategory } from "@/lib/categories";
 
 const SHEET_NAME = "expenses";
-const RANGE_ALL = `${SHEET_NAME}!A2:F`;
+const RANGE_ALL = `${SHEET_NAME}!A2:G`;
 
 let _sheets: sheets_v4.Sheets | null = null;
 
@@ -30,12 +31,29 @@ function getSheetId(): string {
 }
 
 function rowToExpense(row: string[]): Expense {
-  const [id, date, item, amount, remark, createdAt] = row;
-  return { id, date, item, amount: Number(amount) || 0, remark: remark ?? "", createdAt };
+  // Legacy rows written before the category column exist without column G.
+  const [id, date, item, amount, remark, createdAt, category] = row;
+  return {
+    id,
+    date,
+    item,
+    amount: Number(amount) || 0,
+    remark: remark ?? "",
+    createdAt,
+    category: toCategory(category),
+  };
 }
 
 function expenseToRow(expense: Expense): string[] {
-  return [expense.id, expense.date, expense.item, String(expense.amount), expense.remark ?? "", expense.createdAt];
+  return [
+    expense.id,
+    expense.date,
+    expense.item,
+    String(expense.amount),
+    expense.remark ?? "",
+    expense.createdAt,
+    expense.category,
+  ];
 }
 
 export async function readAllExpenses(): Promise<Expense[]> {
@@ -89,7 +107,7 @@ export async function updateExpense(id: string, input: NewExpense): Promise<Expe
   const expense: Expense = { id, createdAt, ...input };
   await sheets.spreadsheets.values.update({
     spreadsheetId: getSheetId(),
-    range: `${SHEET_NAME}!A${rowNumber}:F${rowNumber}`,
+    range: `${SHEET_NAME}!A${rowNumber}:G${rowNumber}`,
     valueInputOption: "USER_ENTERED",
     requestBody: { values: [expenseToRow(expense)] },
   });

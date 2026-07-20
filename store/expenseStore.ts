@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { DailyTotal, Expense, NewExpense } from "@/types";
+import { WEEK_LABELS, currentWeekDates, todayISO } from "@/lib/formatters";
 
 interface ExpenseState {
   expenses: Expense[];
@@ -84,4 +85,20 @@ export function selectTotalForDate(expenses: Expense[], dateISO: string): number
 
 export function selectTotalForMonth(expenses: Expense[], monthISO: string): number {
   return expenses.filter((e) => e.date.startsWith(monthISO)).reduce((sum, e) => sum + e.amount, 0);
+}
+
+export interface WeekDay {
+  label: string;
+  total: number;
+  isToday: boolean;
+}
+
+export function selectWeek(expenses: Expense[]): WeekDay[] {
+  const dates = currentWeekDates();
+  const today = todayISO();
+  return dates.map((date, i) => ({
+    label: WEEK_LABELS[i],
+    total: selectTotalForDate(expenses, date),
+    isToday: date === today,
+  }));
 }

@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { IBM_Plex_Sans_Thai } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const ibmPlexThai = IBM_Plex_Sans_Thai({
+  variable: "--font-ibm-plex-thai",
+  subsets: ["latin", "thai"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -16,7 +17,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f5f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+  ],
 };
+
+// Apply the persisted theme before first paint to avoid a light/dark flash.
+const themeInit = `(function(){try{var t=localStorage.getItem('theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -24,8 +32,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="th" className={`${ibmPlexThai.variable} h-full antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

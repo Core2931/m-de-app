@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import GlassCard from "@/components/ui/GlassCard";
-import Input from "@/components/ui/Input";
-import BottomNav from "@/components/layout/BottomNav";
+import Card from "@/components/ui/Card";
+import Avatar from "@/components/ui/Avatar";
+import Screen from "@/components/layout/Screen";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 
@@ -29,52 +29,72 @@ export default function ExpensesPage() {
   const rangeTotal = filtered.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <main className="flex-1 flex flex-col p-4 pb-28 max-w-md mx-auto w-full gap-4">
-      <h1 className="text-white text-xl font-semibold">รายการรายจ่าย</h1>
+    <Screen>
+      <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการรายจ่าย</h1>
 
-      <GlassCard className="flex flex-col gap-3">
-        <div className="grid grid-cols-2 gap-3">
-          <Input label="จากวันที่" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          <Input label="ถึงวันที่" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-        </div>
-        {(from || to) && (
-          <p className="text-white/80 text-sm">
-            รวมช่วงที่เลือก: <span className="font-semibold">{formatCurrency(rangeTotal)}</span>
-          </p>
-        )}
-      </GlassCard>
-
-      {isLoading && <p className="text-white/50 text-sm">กำลังโหลด...</p>}
-      {error && <p className="text-red-200 text-sm">{error}</p>}
-      {!isLoading && dailyTotals.length === 0 && (
-        <p className="text-white/50 text-sm text-center">ไม่มีรายการ</p>
-      )}
-
-      <div className="flex flex-col gap-3">
-        {dailyTotals.map((day) => (
-          <GlassCard key={day.date}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white font-medium text-sm">{formatDate(day.date)}</span>
-              <span className="text-white/80 text-sm font-semibold">{formatCurrency(day.total)}</span>
-            </div>
-            <ul className="flex flex-col gap-1.5">
-              {day.items.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={`/expenses/${item.id}`}
-                    className="flex items-center justify-between text-white/90 text-sm hover:text-white"
-                  >
-                    <span>{item.item}</span>
-                    <span>{formatCurrency(item.amount)}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </GlassCard>
-        ))}
+      <div className="mb-4 flex gap-3">
+        <label className="flex-1">
+          <span className="mb-1.5 block text-xs font-medium text-sub">จากวันที่</span>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="w-full rounded-xl border border-border bg-card px-3 py-[10px] text-sm text-text outline-none focus:border-accent"
+          />
+        </label>
+        <label className="flex-1">
+          <span className="mb-1.5 block text-xs font-medium text-sub">ถึงวันที่</span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="w-full rounded-xl border border-border bg-card px-3 py-[10px] text-sm text-text outline-none focus:border-accent"
+          />
+        </label>
       </div>
 
-      <BottomNav />
-    </main>
+      {(from || to) && (
+        <p className="mb-4 text-sm text-sub">
+          รวมช่วงที่เลือก:{" "}
+          <span className="font-semibold text-text">{formatCurrency(rangeTotal)}</span>
+        </p>
+      )}
+
+      {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}
+      {error && <p className="text-sm text-accent">{error}</p>}
+      {!isLoading && !error && dailyTotals.length === 0 && (
+        <p className="text-center text-sm text-sub">ไม่มีรายการ</p>
+      )}
+
+      <div className="flex flex-col gap-4">
+        {dailyTotals.map((day) => (
+          <div key={day.date}>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[13px] font-medium text-sub">{formatDate(day.date)}</span>
+              <span className="text-[13px] font-semibold text-sub">
+                {formatCurrency(day.total)}
+              </span>
+            </div>
+            <Card className="rounded-[20px] px-5 py-1">
+              {day.items.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/expenses/${item.id}`}
+                  className="flex items-center gap-3 py-3 transition-transform active:scale-[0.98]"
+                >
+                  <Avatar category={item.category} size={34} />
+                  <span className="flex-1 truncate text-[15px] font-medium text-text">
+                    {item.item}
+                  </span>
+                  <span className="text-[15px] font-semibold text-text">
+                    {formatCurrency(item.amount)}
+                  </span>
+                </Link>
+              ))}
+            </Card>
+          </div>
+        ))}
+      </div>
+    </Screen>
   );
 }
