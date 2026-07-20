@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
+import DateField from "@/components/ui/DateField";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -32,25 +33,9 @@ export default function ExpensesPage() {
     <Screen>
       <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการรายจ่าย</h1>
 
-      <div className="mb-4 flex gap-3">
-        <label className="flex-1">
-          <span className="mb-1.5 block text-xs font-medium text-sub">จากวันที่</span>
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card px-3 py-[10px] text-sm text-text outline-none focus:border-accent"
-          />
-        </label>
-        <label className="flex-1">
-          <span className="mb-1.5 block text-xs font-medium text-sub">ถึงวันที่</span>
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card px-3 py-[10px] text-sm text-text outline-none focus:border-accent"
-          />
-        </label>
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <DateField label="จากวันที่" value={from} onChange={setFrom} filled />
+        <DateField label="ถึงวันที่" value={to} onChange={setTo} filled />
       </div>
 
       {(from || to) && (

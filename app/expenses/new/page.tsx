@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
@@ -51,7 +52,7 @@ export default function NewExpensePage() {
 
       <Card className="rounded-[22px] p-[22px]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input label="วันที่" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+          <DateField label="วันที่" value={date} onChange={setDate} required />
           <Input
             label="จำนวนเงิน"
             type="number"
