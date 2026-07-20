@@ -6,7 +6,7 @@ export const DEFAULT_CATEGORY: Category = "food";
 
 // Single Thai-character initials used inside the category avatars.
 export const CATEGORY_INIT: Record<Category, string> = {
-  food: "อาหาร",
+  food: "อาหา",
   transport: "เดินท",
   life: "ไลฟ์ส",
   other: "อื่นๆ"
