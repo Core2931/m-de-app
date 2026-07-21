@@ -50,11 +50,11 @@ export default function DashboardPage() {
       <div className="mb-4 grid grid-cols-2 gap-3">
         <Card className="rounded-[20px] p-[18px_20px]">
           <p className="mb-2 text-[13px] font-medium text-sub">วันนี้</p>
-          <p className="text-[26px] font-bold text-accent">{formatCurrency(todayTotal)}</p>
+          <p className="text-[26px] font-bold text-expense">{formatCurrency(todayTotal)}</p>
         </Card>
         <Card className="rounded-[20px] p-[18px_20px]">
           <p className="mb-2 text-[13px] font-medium text-sub">เดือนนี้</p>
-          <p className="text-[26px] font-bold text-accent2">{formatCurrency(monthTotal)}</p>
+          <p className="text-[26px] font-bold text-expense">{formatCurrency(monthTotal)}</p>
         </Card>
       </div>
 
@@ -80,7 +80,7 @@ export default function DashboardPage() {
           >
             <Avatar category={item.category} size={38} />
             <span className="flex-1 truncate text-base font-medium text-text">{item.item}</span>
-            <span className="text-base font-semibold text-text">{formatCurrency(item.amount)}</span>
+            <span className="text-base font-semibold text-expense">{formatCurrency(item.amount)}</span>
           </Link>
         ))}
 

@@ -71,7 +71,7 @@ export default function ExpensesPage() {
                   <span className="flex-1 truncate text-[15px] font-medium text-text">
                     {item.item}
                   </span>
-                  <span className="text-[15px] font-semibold text-text">
+                  <span className="text-[15px] font-semibold text-expense">
                     {formatCurrency(item.amount)}
                   </span>
                 </Link>

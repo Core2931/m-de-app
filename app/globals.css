@@ -15,6 +15,7 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent2: var(--accent2);
+  --color-expense: var(--expense);
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
   --color-nav: var(--nav-bg);
@@ -30,16 +31,17 @@
 
 /* Light theme (default) */
 :root {
-  --bg: #f7f5f2;
+  --bg: #f8fafc;
   --card: #ffffff;
-  --text: #1a1a1a;
-  --sub: rgba(0, 0, 0, 0.55);
-  --border: rgba(0, 0, 0, 0.1);
-  --accent: oklch(0.6 0.19 20);
-  --accent2: oklch(0.6 0.19 20);
+  --text: #0f172a;
+  --sub: rgba(15, 23, 42, 0.55);
+  --border: rgba(15, 23, 42, 0.1);
+  --accent: #059669;
+  --accent2: #0891b2;
+  --expense: #ea580c;
   --accent-text: #ffffff;
-  --accent-soft: oklch(0.94 0.03 20);
-  --shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  --accent-soft: rgba(5, 150, 105, 0.12);
+  --shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
   --nav-bg: #ffffff;
   --food: oklch(0.88 0.08 40);
   --transport: oklch(0.88 0.06 230);
@@ -49,20 +51,21 @@
 
 /* Dark theme */
 :root.dark {
-  --bg: #141414;
-  --card: #1e1e1e;
-  --text: #f5f5f5;
-  --sub: rgba(255, 255, 255, 0.55);
-  --border: rgba(255, 255, 255, 0.14);
-  --accent: oklch(0.78 0.12 85);
-  --accent2: oklch(0.78 0.12 85);
-  --accent-text: #141414;
-  --accent-soft: oklch(0.34 0.06 85);
-  --shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-  --nav-bg: #1e1e1e;
-  --food: oklch(0.42 0.07 40);
-  --transport: oklch(0.42 0.06 230);
-  --life: oklch(0.42 0.06 300);
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f1f5f9;
+  --sub: rgba(241, 245, 249, 0.55);
+  --border: rgba(255, 255, 255, 0.12);
+  --accent: #10b981;
+  --accent2: #22d3ee;
+  --expense: #f97316;
+  --accent-text: #0f172a;
+  --accent-soft: rgba(16, 185, 129, 0.18);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --nav-bg: #1e293b;
+  --food: #334155;
+  --transport: #1e3a4a;
+  --life: #3b2e4a;
   --other: oklch(0.42 0.05 150);
 }
 
