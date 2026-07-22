@@ -7,6 +7,14 @@ export function formatCurrency(amount: number, currency = "THB"): string {
   }).format(amount);
 }
 
+// Short form for tight spaces (e.g. above chart bars): 1500 -> "1.5K", no currency symbol.
+export function formatCompact(amount: number): string {
+  return new Intl.NumberFormat("th-TH", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(amount);
+}
+
 export function formatDate(isoDate: string): string {
   return new Intl.DateTimeFormat("th-TH", {
     day: "numeric",
