@@ -11,6 +11,14 @@ const ibmPlexThai = IBM_Plex_Sans_Thai({
 export const metadata: Metadata = {
   title: "รายจ่ายรายวัน",
   description: "จดรายจ่ายรายวัน เก็บข้อมูลใน Google Sheet",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    title: "รายจ่ายรายวัน",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
