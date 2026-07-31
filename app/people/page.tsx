@@ -40,10 +40,15 @@ export default function PeoplePage() {
     if (!settlementsLoaded) loadSettlements();
   }, [settlementsLoaded, loadSettlements]);
 
-  // Both stores must have settled before the balances below can be trusted —
-  // an empty `balances` array while expenses are still loading would falsely
-  // read as "no debts", which is the one thing this page must never show.
+  // Drives the "กำลังโหลด..." text — true only while a fetch is actually in flight.
   const isLoading = expensesLoading || settlementsLoading;
+  // Drives the empty-state guard below. `isLoaded` (not `isLoading`) is the
+  // right gate: both flags start false and only flip true inside load(),
+  // which runs from an effect that hasn't fired yet on first render (and never
+  // fires during static prerendering of this route). Gating on `isLoading`
+  // alone left that pre-effect window — and a failed load, which never sets
+  // isLoaded — free to show "no debts" while the data simply isn't in yet.
+  const bothLoaded = expensesLoaded && settlementsLoaded;
 
   const balances = useMemo(
     () => buildPersonBalances(expenses, settlements),
@@ -88,7 +93,7 @@ export default function PeoplePage() {
       {settlementsError && <p className="text-sm text-expense">{settlementsError}</p>}
       {expensesError && <p className="text-sm text-expense">{expensesError}</p>}
 
-      {!isLoading && balances.length === 0 ? (
+      {bothLoaded && balances.length === 0 ? (
         <p className="mt-6 text-center text-sm text-sub">ไม่มียอดค้างกับใคร</p>
       ) : (
         <Card className="mb-4 rounded-[22px] px-5 py-1">
