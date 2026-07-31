@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
+import SplitPreview from "@/components/ui/SplitPreview";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
@@ -116,7 +117,10 @@ export default function EditExpensePage() {
               <CategoryPicker value={category} onChange={setCategory} />
             </div>
             <Input label="รายการ" value={item} onChange={(e) => setItem(e.target.value)} required />
-            <Input label="หมายเหตุ" value={remark} onChange={(e) => setRemark(e.target.value)} />
+            <div className="flex flex-col gap-2">
+              <Input label="หมายเหตุ" value={remark} onChange={(e) => setRemark(e.target.value)} />
+              <SplitPreview remark={remark} />
+            </div>
             {error && <p className="text-sm text-accent">{error}</p>}
             <div className="mt-1.5 flex gap-3">
               <Button type="submit" disabled={saving} className="flex-1">
