@@ -24,7 +24,6 @@ export default function EditExpensePage() {
   }, [isLoaded, load]);
 
   const expense = expenses.find((e) => e.id === params.id);
-  const summary = expense ? summarizeExpense(expense) : null;
 
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
@@ -35,6 +34,16 @@ export default function EditExpensePage() {
   const [saving, setSaving] = useState(false);
   const [initializedId, setInitializedId] = useState<string | null>(null);
   const initialized = initializedId === expense?.id;
+
+  // Derived from the live form fields (not the stored expense) so the
+  // breakdown box tracks what the user is typing, matching SplitPreview
+  // above it. A non-numeric or non-positive amount mid-typing has nothing
+  // sensible to show (myShare/cashOut would be transiently wrong), so the
+  // box is hidden rather than rendering a misleading number.
+  const liveAmount = Number(amount);
+  const hasValidAmount = Number.isFinite(liveAmount) && liveAmount > 0;
+  const summary =
+    expense && hasValidAmount ? summarizeExpense({ ...expense, amount: liveAmount, remark }) : null;
 
   // Adjust form state during render when a new expense loads, instead of
   // an effect, to avoid an extra cascading render (react-hooks/set-state-in-effect).
@@ -125,11 +134,11 @@ export default function EditExpensePage() {
               <SplitPreview remark={remark} />
             </div>
             {error && <p className="text-sm text-accent">{error}</p>}
-            {expense && summary && summary.splits.length > 0 && (
+            {summary && summary.splits.length > 0 && (
               <div className="rounded-[14px] border border-border p-3 text-[13px]">
                 <div className="flex justify-between py-0.5">
                   <span className="text-sub">ยอดบิล</span>
-                  <span className="text-text">{formatCurrency(expense.amount)}</span>
+                  <span className="text-text">{formatCurrency(liveAmount)}</span>
                 </div>
                 <div className="flex justify-between py-0.5">
                   <span className="text-sub">ค่าใช้จ่ายของฉัน</span>
