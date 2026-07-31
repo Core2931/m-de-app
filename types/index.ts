@@ -17,3 +17,18 @@ export interface DailyTotal {
   total: number;
   items: Expense[];
 }
+
+export type SplitDirection = "owed_to_me" | "i_owe";
+
+export interface Split {
+  person: string; // normalized
+  amount: number;
+  label: string;
+  direction: SplitDirection;
+}
+
+export interface ParsedRemark {
+  splits: Split[];
+  freeText: string;
+  invalid: boolean;
+}
