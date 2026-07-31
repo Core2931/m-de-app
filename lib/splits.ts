@@ -1,4 +1,4 @@
-import type { ParsedRemark, Split, SplitDirection } from "@/types";
+import type { Expense, ExpenseSplitSummary, ParsedRemark, Split, SplitDirection } from "@/types";
 
 // One "[amount] label" chunk. The label runs until the next "[" so a single
 // person can carry several chunks joined by "+".
@@ -56,4 +56,22 @@ export function parseRemark(remark: string): ParsedRemark {
   }
 
   return { splits, freeText: leftovers.join("; "), invalid };
+}
+
+export function summarizeExpense(expense: Expense): ExpenseSplitSummary {
+  const parsed = parseRemark(expense.remark);
+  let lentOut = 0;
+  let borrowed = 0;
+  for (const split of parsed.splits) {
+    if (split.direction === "owed_to_me") lentOut += split.amount;
+    else borrowed += split.amount;
+  }
+  return {
+    ...parsed,
+    lentOut,
+    borrowed,
+    myShare: expense.amount - lentOut,
+    cashOut: expense.amount - borrowed,
+    overAllocated: lentOut + borrowed > expense.amount,
+  };
 }

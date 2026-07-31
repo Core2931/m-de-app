@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { normalizePerson, parseRemark } from "@/lib/splits";
+import { normalizePerson, parseRemark, summarizeExpense } from "@/lib/splits";
+import type { Expense } from "@/types";
 
 describe("normalizePerson", () => {
   it("ตัดคำว่า จ่าย ท้ายชื่อออก", () => {
@@ -92,5 +93,49 @@ describe("parseRemark", () => {
     const result = parseRemark("จ่าย: [50] อะไรสักอย่าง");
     expect(result.splits).toEqual([]);
     expect(result.invalid).toBe(true);
+  });
+});
+
+function makeExpense(amount: number, remark: string): Expense {
+  return {
+    id: "e1",
+    date: "2026-07-31",
+    item: "ข้าวเที่ยง",
+    amount,
+    remark,
+    category: "food",
+    createdAt: "2026-07-31T05:00:00.000Z",
+  };
+}
+
+describe("summarizeExpense", () => {
+  it("ไม่มี split ยอดของฉันเท่ายอดบิล", () => {
+    const s = summarizeExpense(makeExpense(150, "อร่อยดี"));
+    expect(s.lentOut).toBe(0);
+    expect(s.borrowed).toBe(0);
+    expect(s.myShare).toBe(150);
+    expect(s.cashOut).toBe(150);
+    expect(s.overAllocated).toBe(false);
+  });
+
+  it("เราออกให้คนอื่น ลด myShare แต่ cashOut เท่าเดิม", () => {
+    const s = summarizeExpense(makeExpense(150, "ขนม: [50] ค่าอาหาร"));
+    expect(s.lentOut).toBe(50);
+    expect(s.myShare).toBe(100);
+    expect(s.cashOut).toBe(150);
+  });
+
+  it("คนอื่นออกให้เรา ลด cashOut แต่ myShare เท่าเดิม", () => {
+    const s = summarizeExpense(makeExpense(150, "ขนมจ่าย: [50] ค่าอาหาร"));
+    expect(s.borrowed).toBe(50);
+    expect(s.myShare).toBe(150);
+    expect(s.cashOut).toBe(100);
+  });
+
+  it("split รวมเกินยอดบิลติดธง overAllocated", () => {
+    const s = summarizeExpense(makeExpense(100, "ขนม: [80] ก; ต้อมจ่าย: [50] ข"));
+    expect(s.overAllocated).toBe(true);
+    expect(s.myShare).toBe(20);
+    expect(s.cashOut).toBe(50);
   });
 });

@@ -32,3 +32,11 @@ export interface ParsedRemark {
   freeText: string;
   invalid: boolean;
 }
+
+export interface ExpenseSplitSummary extends ParsedRemark {
+  lentOut: number; // เราออกให้คนอื่น
+  borrowed: number; // คนอื่นออกให้เรา
+  myShare: number; // ค่าใช้จ่ายของฉันจริง = amount - lentOut
+  cashOut: number; // เงินออกจากกระเป๋าจริง = amount - borrowed
+  overAllocated: boolean; // lentOut + borrowed > amount
+}
