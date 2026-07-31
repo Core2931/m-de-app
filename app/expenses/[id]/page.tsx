@@ -11,6 +11,8 @@ import SplitPreview from "@/components/ui/SplitPreview";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
+import { summarizeExpense } from "@/lib/splits";
+import { formatCurrency } from "@/lib/formatters";
 
 export default function EditExpensePage() {
   const params = useParams<{ id: string }>();
@@ -22,6 +24,7 @@ export default function EditExpensePage() {
   }, [isLoaded, load]);
 
   const expense = expenses.find((e) => e.id === params.id);
+  const summary = expense ? summarizeExpense(expense) : null;
 
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
@@ -122,6 +125,27 @@ export default function EditExpensePage() {
               <SplitPreview remark={remark} />
             </div>
             {error && <p className="text-sm text-accent">{error}</p>}
+            {expense && summary && summary.splits.length > 0 && (
+              <div className="rounded-[14px] border border-border p-3 text-[13px]">
+                <div className="flex justify-between py-0.5">
+                  <span className="text-sub">ยอดบิล</span>
+                  <span className="text-text">{formatCurrency(expense.amount)}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-sub">ค่าใช้จ่ายของฉัน</span>
+                  <span className="font-semibold text-text">{formatCurrency(summary.myShare)}</span>
+                </div>
+                <div className="flex justify-between py-0.5">
+                  <span className="text-sub">เงินออกจริง</span>
+                  <span className="text-text">{formatCurrency(summary.cashOut)}</span>
+                </div>
+                {summary.overAllocated && (
+                  <p className="mt-1 text-[12px] text-expense">
+                    ⚠ ยอดที่แบ่งรวมกันเกินยอดบิล
+                  </p>
+                )}
+              </div>
+            )}
             <div className="mt-1.5 flex gap-3">
               <Button type="submit" disabled={saving} className="flex-1">
                 {saving ? "กำลังบันทึก..." : "บันทึก"}
