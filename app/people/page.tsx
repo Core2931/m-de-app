@@ -13,16 +13,24 @@ import { formatCurrency, formatDateShort } from "@/lib/formatters";
 import type { PersonBalance } from "@/types";
 
 export default function PeoplePage() {
-  const { expenses, isLoaded: expensesLoaded, load: loadExpenses } = useExpenseStore();
+  const {
+    expenses,
+    isLoaded: expensesLoaded,
+    isLoading: expensesLoading,
+    error: expensesError,
+    load: loadExpenses,
+  } = useExpenseStore();
   const {
     settlements,
     isLoaded: settlementsLoaded,
-    isLoading,
-    error,
+    isLoading: settlementsLoading,
+    error: settlementsError,
     load: loadSettlements,
     remove: removeSettlement,
   } = useSettlementStore();
   const [target, setTarget] = useState<PersonBalance | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!expensesLoaded) loadExpenses();
@@ -31,6 +39,11 @@ export default function PeoplePage() {
   useEffect(() => {
     if (!settlementsLoaded) loadSettlements();
   }, [settlementsLoaded, loadSettlements]);
+
+  // Both stores must have settled before the balances below can be trusted —
+  // an empty `balances` array while expenses are still loading would falsely
+  // read as "no debts", which is the one thing this page must never show.
+  const isLoading = expensesLoading || settlementsLoading;
 
   const balances = useMemo(
     () => buildPersonBalances(expenses, settlements),
@@ -42,6 +55,19 @@ export default function PeoplePage() {
     () => [...settlements].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5),
     [settlements]
   );
+
+  async function handleRemove(id: string) {
+    if (removingId === id) return;
+    setRemovingId(id);
+    setRemoveError(null);
+    try {
+      await removeSettlement(id);
+    } catch (err) {
+      setRemoveError(err instanceof Error ? err.message : "ลบไม่สำเร็จ");
+    } finally {
+      setRemovingId(null);
+    }
+  }
 
   return (
     <Screen>
@@ -59,9 +85,10 @@ export default function PeoplePage() {
       </div>
 
       {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}
-      {error && <p className="text-sm text-expense">{error}</p>}
+      {settlementsError && <p className="text-sm text-expense">{settlementsError}</p>}
+      {expensesError && <p className="text-sm text-expense">{expensesError}</p>}
 
-      {balances.length === 0 && !isLoading ? (
+      {!isLoading && balances.length === 0 ? (
         <p className="mt-6 text-center text-sm text-sub">ไม่มียอดค้างกับใคร</p>
       ) : (
         <Card className="mb-4 rounded-[22px] px-5 py-1">
@@ -74,6 +101,7 @@ export default function PeoplePage() {
       {recentSettlements.length > 0 && (
         <Card className="rounded-[22px] p-[20px_22px]">
           <p className="mb-3 text-[13px] font-medium text-sub">เคลียร์ล่าสุด</p>
+          {removeError && <p className="mb-2 text-[13px] text-expense">{removeError}</p>}
           {recentSettlements.map((settlement) => (
             <div key={settlement.id} className="flex items-center gap-2 py-1.5 text-[13px]">
               <span className="text-sub">{formatDateShort(settlement.date)}</span>
@@ -87,9 +115,10 @@ export default function PeoplePage() {
                 type="button"
                 variant="ghost"
                 className="px-2 py-1 text-[12px]"
-                onClick={() => removeSettlement(settlement.id)}
+                onClick={() => handleRemove(settlement.id)}
+                disabled={removingId === settlement.id}
               >
-                ยกเลิก
+                {removingId === settlement.id ? "กำลังลบ..." : "ยกเลิก"}
               </Button>
             </div>
           ))}
