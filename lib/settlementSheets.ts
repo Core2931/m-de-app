@@ -4,20 +4,22 @@ import { getSheetsClient, getSheetId, getSheetGid, findRowNumber } from "@/lib/s
 const SHEET_NAME = "settlements";
 const RANGE_ALL = `${SHEET_NAME}!A2:G`;
 
-function toDirection(value: string | undefined): SettlementDirection {
+function toDirection(value: unknown): SettlementDirection {
   return value === "paid" ? "paid" : "received";
 }
 
-function rowToSettlement(row: string[]): Settlement {
+// Cells arrive unformatted (see readAllSettlements), so numbers come back as
+// numbers rather than display strings — hence unknown[] instead of string[].
+function rowToSettlement(row: unknown[]): Settlement {
   const [id, date, person, amount, direction, note, createdAt] = row;
   return {
-    id,
-    date,
-    person,
+    id: String(id ?? ""),
+    date: String(date ?? ""),
+    person: String(person ?? ""),
     amount: Number(amount) || 0,
     direction: toDirection(direction),
-    note: note ?? "",
-    createdAt,
+    note: note == null ? "" : String(note),
+    createdAt: String(createdAt ?? ""),
   };
 }
 
@@ -38,7 +40,10 @@ function settlementToRow(settlement: Settlement): string[] {
 // Sheets throws for an unknown tab name — a generic "not found" also covers
 // an invalid/revoked spreadsheet ID, which must surface as a real error
 // instead of being silently reported as an empty settlements list.
-function isMissingTab(err: unknown): boolean {
+// Exported only so lib/settlementSheets.test.ts can pin this regex down: it is
+// the whole difference between "tab not created yet" and "GOOGLE_SHEET_ID is
+// wrong", and widening it would silently turn config errors into empty lists.
+export function isMissingTab(err: unknown): boolean {
   return err instanceof Error && /Unable to parse range/i.test(err.message);
 }
 
@@ -48,8 +53,16 @@ export async function readAllSettlements(): Promise<Settlement[]> {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: getSheetId(),
       range: RANGE_ALL,
+      // This tab is created by hand, so column D can easily pick up a
+      // thousands-separator number format; FORMATTED_VALUE would then hand us
+      // "1,250.50", which Number() reads as NaN and rowToSettlement silently
+      // turns into 0 — a repayment that vanishes. dateTimeRenderOption keeps
+      // column B readable: USER_ENTERED writes store dates as serial numbers,
+      // and UNFORMATTED_VALUE alone would return 46226 instead of "2026-07-20".
+      valueRenderOption: "UNFORMATTED_VALUE",
+      dateTimeRenderOption: "FORMATTED_STRING",
     });
-    const rows = (res.data.values ?? []) as string[][];
+    const rows = (res.data.values ?? []) as unknown[][];
     return rows.filter((row) => row[0]).map(rowToSettlement);
   } catch (err) {
     if (isMissingTab(err)) {
