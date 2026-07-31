@@ -86,6 +86,29 @@ describe("buildPersonBalances", () => {
   it("รายการที่ไม่มี split ไม่สร้างคน", () => {
     expect(buildPersonBalances([expense("e1", 100, "ข้าวเที่ยง")], [])).toEqual([]);
   });
+
+  it("settlement ของคนที่ไม่มี split เลย ไม่สร้างคนขึ้นมา", () => {
+    expect(buildPersonBalances([], [settlement("ขนม", 100, "received")])).toEqual([]);
+  });
+
+  it("settlement ของคนที่ split ถูกลบไปแล้ว ไม่กลายเป็นหนี้ผี", () => {
+    // The expense that justified the settlement was later edited/deleted, so
+    // only the settlement remains. It must not resurrect the person — and
+    // certainly not with the sign flipped into "ต้องกันไว้".
+    const balances = buildPersonBalances(
+      [expense("e1", 100, "ข้าวเที่ยง"), expense("e2", 80, "ต้อม: [80] น้ำ")],
+      [settlement("ขนม", 100, "received")]
+    );
+    expect(balances.map((b) => b.person)).toEqual(["ต้อม"]);
+    expect(summarizeBalances(balances)).toEqual({ reserved: 0, receivable: 80 });
+  });
+
+  it("settlement ที่ไม่มีเจ้าของไม่ทำให้ยอดต้องกันไว้งอกขึ้น", () => {
+    expect(summarizeBalances(buildPersonBalances([], [settlement("ขนม", 100, "paid")]))).toEqual({
+      reserved: 0,
+      receivable: 0,
+    });
+  });
 });
 
 describe("summarizeBalances", () => {

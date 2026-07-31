@@ -1,4 +1,4 @@
-import { summarizeExpense } from "@/lib/splits";
+import { EPSILON, summarizeExpense } from "@/lib/splits";
 import type {
   BalanceTotals,
   Expense,
@@ -6,10 +6,6 @@ import type {
   Settlement,
   SplitEntry,
 } from "@/types";
-
-// Balances below this are treated as settled — guards against float drift
-// from decimal amounts (e.g. 0.1 + 0.2).
-const EPSILON = 0.005;
 
 export function buildPersonBalances(
   expenses: Expense[],
@@ -42,8 +38,16 @@ export function buildPersonBalances(
     }
   }
 
+  // Settlements only net against splits that already exist — deliberately NOT
+  // ensure(). A repayment on its own is not a debt: creating a person here
+  // would turn "ขนม paid me back 100" into balance 0 - 0 - 100 = -100, i.e.
+  // money to set aside, with the sign inverted. It also means a settlement
+  // that outlived its expense (settled, then the expense was edited or
+  // deleted) is ignored instead of resurrecting the person as a phantom debt
+  // the UI has no way to reach.
   for (const settlement of settlements) {
-    const person = ensure(settlement.person);
+    const person = byPerson.get(settlement.person);
+    if (!person) continue;
     person.settledNet +=
       settlement.direction === "received" ? settlement.amount : -settlement.amount;
   }
