@@ -46,7 +46,8 @@ export default function DashboardPage() {
   const todayMyShare = selectMyShareForDate(expenses, today);
   const monthMyShare = selectMyShareForMonth(expenses, month);
   const totals = summarizeBalances(buildPersonBalances(expenses, settlements));
-  const hasOutstanding = totals.reserved > 0 || totals.receivable > 0;
+  const hasOutstanding =
+    isLoaded && settlementsLoaded && (totals.reserved > 0 || totals.receivable > 0);
 
   const todayItems = expenses
     .filter((e) => e.date === today)
