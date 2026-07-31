@@ -34,9 +34,9 @@ export interface ParsedRemark {
 }
 
 export interface ExpenseSplitSummary extends ParsedRemark {
-  lentOut: number; // เราออกให้คนอื่น
-  borrowed: number; // คนอื่นออกให้เรา
-  myShare: number; // ค่าใช้จ่ายของฉันจริง = amount - lentOut
-  cashOut: number; // เงินออกจากกระเป๋าจริง = amount - borrowed
+  lentOut: number; // amount we paid on someone else's behalf
+  borrowed: number; // amount someone else paid on our behalf
+  myShare: number; // what this expense really cost us = amount - lentOut
+  cashOut: number; // what actually left our pocket = amount - borrowed
   overAllocated: boolean; // lentOut + borrowed > amount
 }
