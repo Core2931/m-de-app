@@ -34,9 +34,12 @@ function settlementToRow(settlement: Settlement): string[] {
 }
 
 // The tab is created by hand; treat a missing tab as "no settlements yet"
-// so the app still works before it exists.
+// so the app still works before it exists. Only match the range-parse error
+// Sheets throws for an unknown tab name — a generic "not found" also covers
+// an invalid/revoked spreadsheet ID, which must surface as a real error
+// instead of being silently reported as an empty settlements list.
 function isMissingTab(err: unknown): boolean {
-  return err instanceof Error && /Unable to parse range|not found/i.test(err.message);
+  return err instanceof Error && /Unable to parse range/i.test(err.message);
 }
 
 export async function readAllSettlements(): Promise<Settlement[]> {
@@ -57,6 +60,8 @@ export async function readAllSettlements(): Promise<Settlement[]> {
   }
 }
 
+// Note: writes deliberately do NOT tolerate a missing tab like readAllSettlements
+// does — a failed append/delete should fail loudly rather than silently no-op.
 export async function appendSettlement(input: NewSettlement): Promise<Settlement> {
   const sheets = getSheetsClient();
   const settlement: Settlement = {
