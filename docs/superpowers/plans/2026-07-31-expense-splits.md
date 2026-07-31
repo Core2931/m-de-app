@@ -706,7 +706,7 @@ git commit -m "feat: aggregate per-person outstanding balances"
 **Interfaces:**
 - Consumes: type `Settlement`, `NewSettlement` จาก Task 3
 - Produces:
-  - `getSheetsClient(): sheets_v4.Sheets`, `getSheetId(): string`, `getSheetGid(sheetName: string): Promise<number>` จาก `@/lib/sheetsClient`
+  - `getSheetsClient(): sheets_v4.Sheets`, `getSheetId(): string`, `getSheetGid(sheetName: string): Promise<number>`, `findRowNumber(sheetName: string, id: string): Promise<number | null>` จาก `@/lib/sheetsClient`
   - `readAllSettlements(): Promise<Settlement[]>`, `appendSettlement(input: NewSettlement): Promise<Settlement>`, `deleteSettlement(id: string): Promise<boolean>` จาก `@/lib/settlementSheets`
 
 **หมายเหตุก่อนเริ่ม:** ต้องสร้าง tab ชื่อ `settlements` ใน Google Sheet ด้วยมือ พร้อม header แถวแรก:
@@ -751,6 +751,19 @@ export async function getSheetGid(sheetName: string): Promise<number> {
   if (sheetId == null) throw new Error(`Sheet tab "${sheetName}" not found`);
   return sheetId;
 }
+
+// Row numbers are 1-based and include the header row, so a match at
+// array index N sits at sheet row N + 2.
+export async function findRowNumber(sheetName: string, id: string): Promise<number | null> {
+  const sheets = getSheetsClient();
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: getSheetId(),
+    range: `${sheetName}!A2:A`,
+  });
+  const rows = (res.data.values ?? []) as string[][];
+  const index = rows.findIndex((row) => row[0] === id);
+  return index === -1 ? null : index + 2;
+}
 ```
 
 - [ ] **Step 2: แก้ `lib/sheets.ts` ให้ใช้ client ร่วม**
@@ -760,13 +773,27 @@ export async function getSheetGid(sheetName: string): Promise<number> {
 ```ts
 import type { Expense, NewExpense } from "@/types";
 import { toCategory } from "@/lib/categories";
-import { getSheetsClient, getSheetId, getSheetGid } from "@/lib/sheetsClient";
+import { getSheetsClient, getSheetId, getSheetGid, findRowNumber } from "@/lib/sheetsClient";
 
 const SHEET_NAME = "expenses";
 const RANGE_ALL = `${SHEET_NAME}!A2:G`;
 ```
 
-ลบฟังก์ชัน `getSheetGid()` เดิม (บรรทัด 117–124) ทิ้ง แล้วแก้บรรทัดที่เรียกใช้ใน `deleteExpense` จาก:
+ลบฟังก์ชัน `findRowNumber()` เดิม (พร้อม comment เหนือมัน) และ `getSheetGid()` เดิมทิ้ง — ทั้งสองย้ายไปอยู่ใน `lib/sheetsClient.ts` แล้ว จากนั้นแก้จุดเรียกใช้:
+
+ใน `updateExpense` และ `deleteExpense` เปลี่ยน:
+
+```ts
+  const rowNumber = await findRowNumber(id);
+```
+
+เป็น:
+
+```ts
+  const rowNumber = await findRowNumber(SHEET_NAME, id);
+```
+
+และใน `deleteExpense` เปลี่ยน:
 
 ```ts
   const sheetId = await getSheetGid();
@@ -787,7 +814,7 @@ Expected: ไม่มี error
 
 ```ts
 import type { NewSettlement, Settlement, SettlementDirection } from "@/types";
-import { getSheetsClient, getSheetId, getSheetGid } from "@/lib/sheetsClient";
+import { getSheetsClient, getSheetId, getSheetGid, findRowNumber } from "@/lib/sheetsClient";
 
 const SHEET_NAME = "settlements";
 const RANGE_ALL = `${SHEET_NAME}!A2:G`;
@@ -861,21 +888,8 @@ export async function appendSettlement(input: NewSettlement): Promise<Settlement
   return settlement;
 }
 
-// Row numbers are 1-based and include the header row, so a match at
-// array index N sits at sheet row N + 2.
-async function findRowNumber(id: string): Promise<number | null> {
-  const sheets = getSheetsClient();
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: getSheetId(),
-    range: `${SHEET_NAME}!A2:A`,
-  });
-  const rows = (res.data.values ?? []) as string[][];
-  const index = rows.findIndex((row) => row[0] === id);
-  return index === -1 ? null : index + 2;
-}
-
 export async function deleteSettlement(id: string): Promise<boolean> {
-  const rowNumber = await findRowNumber(id);
+  const rowNumber = await findRowNumber(SHEET_NAME, id);
   if (rowNumber === null) return false;
   const sheets = getSheetsClient();
   const sheetId = await getSheetGid(SHEET_NAME);
