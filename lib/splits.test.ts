@@ -89,6 +89,21 @@ describe("parseRemark", () => {
     expect(result.invalid).toBe(true);
   });
 
+  it("ใช้ , คั่นคนแทน ; ติดธง invalid แต่ยังเก็บ split ไว้", () => {
+    // "," is not a separator on purpose, so ต้อม's 80 lands on ขนม. The data is
+    // kept as-is, but the label swallowed a ":" — enough to raise the warning.
+    const result = parseRemark("ขนม: [50] ข้าว, ต้อม: [80] น้ำ");
+    expect(result.invalid).toBe(true);
+    expect(result.splits).toHaveLength(2);
+    expect(result.splits.every((s) => s.person === "ขนม")).toBe(true);
+  });
+
+  it("label ปกติที่ไม่มี : ไม่ติดธง", () => {
+    const result = parseRemark("ขนม: [50] ข้าว, น้ำ, ขนมหวาน");
+    expect(result.invalid).toBe(false);
+    expect(result.splits).toHaveLength(1);
+  });
+
   it("ชื่อที่เป็นคำว่า จ่าย ล้วนถือว่า invalid", () => {
     const result = parseRemark("จ่าย: [50] อะไรสักอย่าง");
     expect(result.splits).toEqual([]);
@@ -130,6 +145,14 @@ describe("summarizeExpense", () => {
     expect(s.borrowed).toBe(50);
     expect(s.myShare).toBe(150);
     expect(s.cashOut).toBe(100);
+  });
+
+  it("เศษทศนิยม 0.1 + 0.2 เทียบ 0.3 ไม่ถือว่าเกินยอดบิล", () => {
+    const s = summarizeExpense(makeExpense(0.3, "ก: [0.1] a+ [0.2] b"));
+    expect(s.lentOut).toBeCloseTo(0.3, 10);
+    expect(s.overAllocated).toBe(false);
+    // Without the snap this is -5.5e-17, which formatCurrency renders as "-฿0".
+    expect(Object.is(s.myShare, 0)).toBe(true);
   });
 
   it("split รวมเกินยอดบิลติดธง overAllocated", () => {

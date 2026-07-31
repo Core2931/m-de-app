@@ -3,6 +3,7 @@ import { readAllExpenses } from "@/lib/sheets";
 import { readAllSettlements, appendSettlement } from "@/lib/settlementSheets";
 import { buildPersonBalances } from "@/lib/balances";
 import { validateSettlementInput } from "@/lib/validation";
+import { EPSILON } from "@/lib/splits";
 
 export async function GET() {
   const settlements = await readAllSettlements();
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
   if (input.direction !== expectedDirection) {
     return NextResponse.json({ error: "ทิศทางการเคลียร์ไม่ตรงกับยอดค้าง" }, { status: 400 });
   }
-  if (input.amount > Math.abs(balance.balance) + 0.005) {
+  if (input.amount > Math.abs(balance.balance) + EPSILON) {
     return NextResponse.json({ error: "จำนวนเงินเกินยอดค้าง" }, { status: 400 });
   }
 
