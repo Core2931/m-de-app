@@ -34,8 +34,8 @@ export default function ExpensesPage() {
       <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการรายจ่าย</h1>
 
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <DateField label="จากวันที่" value={from} onChange={setFrom} filled />
-        <DateField label="ถึงวันที่" value={to} onChange={setTo} filled />
+        <DateField label="จากวันที่" value={from} onChange={setFrom} filled align="left" />
+        <DateField label="ถึงวันที่" value={to} onChange={setTo} filled align="right" />
       </div>
 
       {(from || to) && (
