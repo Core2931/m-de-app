@@ -40,3 +40,38 @@ export interface ExpenseSplitSummary extends ParsedRemark {
   cashOut: number; // what actually left our pocket = amount - borrowed
   overAllocated: boolean; // lentOut + borrowed > amount
 }
+
+export type SettlementDirection = "received" | "paid";
+
+export interface Settlement {
+  id: string;
+  date: string; // YYYY-MM-DD
+  person: string; // normalized
+  amount: number;
+  direction: SettlementDirection;
+  note: string;
+  createdAt: string; // ISO timestamp
+}
+
+export type NewSettlement = Omit<Settlement, "id" | "createdAt">;
+
+export interface SplitEntry {
+  expenseId: string;
+  date: string;
+  item: string;
+  split: Split;
+}
+
+export interface PersonBalance {
+  person: string;
+  balance: number; // positive: they owe us, negative: we owe them
+  lentOut: number;
+  borrowed: number;
+  settledNet: number;
+  entries: SplitEntry[];
+}
+
+export interface BalanceTotals {
+  reserved: number; // we are obligated to pay this amount
+  receivable: number; // we will receive this amount
+}
