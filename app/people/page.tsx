@@ -16,14 +16,12 @@ export default function PeoplePage() {
   const {
     expenses,
     isLoaded: expensesLoaded,
-    isLoading: expensesLoading,
     error: expensesError,
     load: loadExpenses,
   } = useExpenseStore();
   const {
     settlements,
     isLoaded: settlementsLoaded,
-    isLoading: settlementsLoading,
     error: settlementsError,
     load: loadSettlements,
     remove: removeSettlement,
@@ -40,15 +38,16 @@ export default function PeoplePage() {
     if (!settlementsLoaded) loadSettlements();
   }, [settlementsLoaded, loadSettlements]);
 
-  // Drives the "กำลังโหลด..." text — true only while a fetch is actually in flight.
-  const isLoading = expensesLoading || settlementsLoading;
-  // Drives the empty-state guard below. `isLoaded` (not `isLoading`) is the
-  // right gate: both flags start false and only flip true inside load(),
-  // which runs from an effect that hasn't fired yet on first render (and never
-  // fires during static prerendering of this route). Gating on `isLoading`
-  // alone left that pre-effect window — and a failed load, which never sets
-  // isLoaded — free to show "no debts" while the data simply isn't in yet.
+  // Gates every number on this screen — totals, person list, empty state.
+  // `isLoaded` (not `isLoading`) is the right gate: both flags start false and
+  // only flip true inside load(), which runs from an effect that hasn't fired
+  // yet on first render (and never fires during static prerendering of this
+  // route). Gating on `isLoading` alone left that pre-effect window — and a
+  // failed load, which never sets isLoaded — free to render totals derived
+  // from an empty store as if they were real. Same condition the Home
+  // outstanding card uses, so the two screens cannot disagree.
   const bothLoaded = expensesLoaded && settlementsLoaded;
+  const hasLoadError = Boolean(expensesError || settlementsError);
 
   const balances = useMemo(
     () => buildPersonBalances(expenses, settlements),
@@ -78,30 +77,33 @@ export default function PeoplePage() {
     <Screen>
       <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">ค้างอยู่</h1>
 
-      <div className="mb-4 grid grid-cols-2 gap-3">
-        <Card className="rounded-[20px] p-[18px_20px]">
-          <p className="mb-2 text-[13px] font-medium text-sub">ต้องกันไว้</p>
-          <p className="text-[24px] font-bold text-expense">{formatCurrency(totals.reserved)}</p>
-        </Card>
-        <Card className="rounded-[20px] p-[18px_20px]">
-          <p className="mb-2 text-[13px] font-medium text-sub">จะได้คืน</p>
-          <p className="text-[24px] font-bold text-accent">{formatCurrency(totals.receivable)}</p>
-        </Card>
-      </div>
+      {bothLoaded && (
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          <Card className="rounded-[20px] p-[18px_20px]">
+            <p className="mb-2 text-[13px] font-medium text-sub">ต้องกันไว้</p>
+            <p className="text-[24px] font-bold text-expense">{formatCurrency(totals.reserved)}</p>
+          </Card>
+          <Card className="rounded-[20px] p-[18px_20px]">
+            <p className="mb-2 text-[13px] font-medium text-sub">จะได้คืน</p>
+            <p className="text-[24px] font-bold text-accent">{formatCurrency(totals.receivable)}</p>
+          </Card>
+        </div>
+      )}
 
-      {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}
+      {!bothLoaded && !hasLoadError && <p className="text-sm text-sub">กำลังโหลด...</p>}
       {settlementsError && <p className="text-sm text-expense">{settlementsError}</p>}
       {expensesError && <p className="text-sm text-expense">{expensesError}</p>}
 
-      {bothLoaded && balances.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-sub">ไม่มียอดค้างกับใคร</p>
-      ) : (
-        <Card className="mb-4 rounded-[22px] px-5 py-1">
-          {balances.map((balance) => (
-            <PersonRow key={balance.person} balance={balance} onSettle={setTarget} />
-          ))}
-        </Card>
-      )}
+      {bothLoaded &&
+        (balances.length === 0 ? (
+          <p className="mt-6 text-center text-sm text-sub">ไม่มียอดค้างกับใคร</p>
+        ) : (
+          <Card className="mb-4 rounded-[22px] px-5 py-1">
+            {balances.map((balance) => (
+              <PersonRow key={balance.person} balance={balance} onSettle={setTarget} />
+            ))}
+          </Card>
+        ))}
 
       {recentSettlements.length > 0 && (
         <Card className="rounded-[22px] p-[20px_22px]">
