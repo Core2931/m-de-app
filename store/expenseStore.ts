@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { DailyTotal, Expense, NewExpense } from "@/types";
 import { WEEK_LABELS, currentWeekDates, todayISO } from "@/lib/formatters";
+import { summarizeExpense } from "@/lib/splits";
 
 interface ExpenseState {
   expenses: Expense[];
@@ -101,4 +102,16 @@ export function selectWeek(expenses: Expense[]): WeekDay[] {
     total: selectTotalForDate(expenses, date),
     isToday: date === today,
   }));
+}
+
+export function selectMyShareForDate(expenses: Expense[], dateISO: string): number {
+  return expenses
+    .filter((e) => e.date === dateISO)
+    .reduce((sum, e) => sum + summarizeExpense(e).myShare, 0);
+}
+
+export function selectMyShareForMonth(expenses: Expense[], monthISO: string): number {
+  return expenses
+    .filter((e) => e.date.startsWith(monthISO))
+    .reduce((sum, e) => sum + summarizeExpense(e).myShare, 0);
 }

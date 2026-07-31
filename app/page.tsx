@@ -11,8 +11,12 @@ import {
   useExpenseStore,
   selectTotalForDate,
   selectTotalForMonth,
+  selectMyShareForDate,
+  selectMyShareForMonth,
   selectWeek,
 } from "@/store/expenseStore";
+import { useSettlementStore } from "@/store/settlementStore";
+import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
 import { formatCurrency, todayISO, currentMonthISO } from "@/lib/formatters";
 
 const TODAY_CAP = 4;
@@ -20,16 +24,30 @@ const TODAY_CAP = 4;
 export default function DashboardPage() {
   const router = useRouter();
   const { expenses, isLoaded, isLoading, error, load } = useExpenseStore();
+  const {
+    settlements,
+    isLoaded: settlementsLoaded,
+    load: loadSettlements,
+  } = useSettlementStore();
 
   useEffect(() => {
     if (!isLoaded) load();
   }, [isLoaded, load]);
+
+  useEffect(() => {
+    if (!settlementsLoaded) loadSettlements();
+  }, [settlementsLoaded, loadSettlements]);
 
   const today = todayISO();
   const month = currentMonthISO();
   const todayTotal = selectTotalForDate(expenses, today);
   const monthTotal = selectTotalForMonth(expenses, month);
   const week = selectWeek(expenses);
+  const todayMyShare = selectMyShareForDate(expenses, today);
+  const monthMyShare = selectMyShareForMonth(expenses, month);
+  const totals = summarizeBalances(buildPersonBalances(expenses, settlements));
+  const hasOutstanding =
+    isLoaded && settlementsLoaded && (totals.reserved > 0 || totals.receivable > 0);
 
   const todayItems = expenses
     .filter((e) => e.date === today)
@@ -51,12 +69,43 @@ export default function DashboardPage() {
         <Card className="rounded-[20px] p-[18px_20px]">
           <p className="mb-2 text-[13px] font-medium text-sub">วันนี้</p>
           <p className="text-[26px] font-bold text-expense">{formatCurrency(todayTotal)}</p>
+          {todayMyShare !== todayTotal && (
+            <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(todayMyShare)}</p>
+          )}
         </Card>
         <Card className="rounded-[20px] p-[18px_20px]">
           <p className="mb-2 text-[13px] font-medium text-sub">เดือนนี้</p>
           <p className="text-[26px] font-bold text-expense">{formatCurrency(monthTotal)}</p>
+          {monthMyShare !== monthTotal && (
+            <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(monthMyShare)}</p>
+          )}
         </Card>
       </div>
+
+      {hasOutstanding && (
+        <Link href="/people" className="mb-4 block transition-transform active:scale-[0.98]">
+          <Card className="rounded-[22px] p-[18px_22px]">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[13px] font-medium text-sub">ค้างอยู่</p>
+              <span className="text-[13px] font-semibold text-accent">ดูทั้งหมด →</span>
+            </div>
+            <div className="flex gap-6">
+              <div>
+                <p className="text-[12px] text-sub">ต้องกันไว้</p>
+                <p className="text-[20px] font-bold text-expense">
+                  {formatCurrency(totals.reserved)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[12px] text-sub">จะได้คืน</p>
+                <p className="text-[20px] font-bold text-accent">
+                  {formatCurrency(totals.receivable)}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </Link>
+      )}
 
       <Card className="mb-4 rounded-[22px] p-[20px_22px]">
         <p className="mb-[14px] text-[13px] font-medium text-sub">สัปดาห์นี้</p>

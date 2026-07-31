@@ -8,6 +8,7 @@ import DateField from "@/components/ui/DateField";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { summarizeExpense } from "@/lib/splits";
 
 export default function ExpensesPage() {
   const { expenses, isLoaded, isLoading, error, load } = useExpenseStore();
@@ -61,21 +62,31 @@ export default function ExpensesPage() {
               </span>
             </div>
             <Card className="rounded-[20px] px-5 py-1">
-              {day.items.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/expenses/${item.id}`}
-                  className="flex items-center gap-3 py-3 transition-transform active:scale-[0.98]"
-                >
-                  <Avatar category={item.category} size={34} />
-                  <span className="flex-1 truncate text-[15px] font-medium text-text">
-                    {item.item}
-                  </span>
-                  <span className="text-[15px] font-semibold text-expense">
-                    {formatCurrency(item.amount)}
-                  </span>
-                </Link>
-              ))}
+              {day.items.map((item) => {
+                const summary = summarizeExpense(item);
+                const hasSplit = summary.splits.length > 0;
+                return (
+                  <Link
+                    key={item.id}
+                    href={`/expenses/${item.id}`}
+                    className="flex items-center gap-3 py-3 transition-transform active:scale-[0.98]"
+                  >
+                    <Avatar category={item.category} size={34} />
+                    <span className="flex-1 truncate text-[15px] font-medium text-text">
+                      {item.item}
+                    </span>
+                    {summary.invalid && <span className="text-[13px] text-expense">⚠</span>}
+                    {hasSplit && (
+                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+                        ของฉัน {formatCurrency(summary.myShare)}
+                      </span>
+                    )}
+                    <span className="text-[15px] font-semibold text-expense">
+                      {formatCurrency(item.amount)}
+                    </span>
+                  </Link>
+                );
+              })}
             </Card>
           </div>
         ))}

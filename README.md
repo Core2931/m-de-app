@@ -19,10 +19,17 @@
 1. สร้าง Google Sheet ใหม่ (หรือใช้ของเดิม แต่แนะนำสร้างแยก เพื่อไม่ปนกับ sheet เดิม)
 2. สร้าง tab ชื่อ **`expenses`** (ตัวสะกดต้องตรงเป๊ะ) ใส่ header แถวแรก:
    ```
-   id | date | item | amount | remark | createdAt
+   id | date | item | amount | remark | createdAt | category
    ```
-3. แชร์ sheet ให้ service account email (จากขั้นตอน 1) เป็น **Editor** (Share → ใส่ email `xxx@yyy.iam.gserviceaccount.com`)
-4. คัดลอก Sheet ID จาก URL: `https://docs.google.com/spreadsheets/d/<SHEET_ID>/edit`
+3. สร้าง tab ชื่อ **`settlements`** (ตัวสะกดต้องตรงเป๊ะ) ใส่ header แถวแรก:
+   ```
+   id | date | person | amount | direction | note | createdAt
+   ```
+   tab นี้เก็บ "การเคลียร์หนี้" ของหน้า **ค้างอยู่** (`/people`) — ยอดที่คนอื่นคืนเรา/เราคืนคนอื่น
+
+   ⚠️ **ถ้าไม่มี tab นี้ ระบบจะไม่ขึ้น error** — ฝั่งอ่านถูกออกแบบให้ถือว่า "ยังไม่เคยเคลียร์อะไรเลย" แล้วคืนลิสต์ว่าง (log warning ที่ server) อาการที่เห็นคือยอดค้างไม่เคยถูกหักออกเลย และพอกดปุ่ม **เคลียร์** จะขึ้น "บันทึกไม่สำเร็จ" — ไม่ใช่ข้อความว่าหา tab ไม่เจอ
+4. แชร์ sheet ให้ service account email (จากขั้นตอน 1) เป็น **Editor** (Share → ใส่ email `xxx@yyy.iam.gserviceaccount.com`)
+5. คัดลอก Sheet ID จาก URL: `https://docs.google.com/spreadsheets/d/<SHEET_ID>/edit`
 
 ### 3. Env vars
 

@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
+import SplitPreview from "@/components/ui/SplitPreview";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
 import { todayISO } from "@/lib/formatters";
@@ -76,7 +77,15 @@ export default function NewExpensePage() {
             placeholder="เช่น ข้าวเที่ยง"
             required
           />
-          <Input label="หมายเหตุ" value={remark} onChange={(e) => setRemark(e.target.value)} placeholder="(ถ้ามี)" />
+          <div className="flex flex-col gap-2">
+            <Input
+              label="หมายเหตุ"
+              value={remark}
+              onChange={(e) => setRemark(e.target.value)}
+              placeholder="(ถ้ามี) เช่น ขนม: [50] ค่าอาหาร"
+            />
+            <SplitPreview remark={remark} />
+          </div>
           {error && <p className="text-sm text-accent">{error}</p>}
           <Button type="submit" disabled={saving} className="mt-1.5 w-full">
             {saving ? "กำลังบันทึก..." : "บันทึก"}
