@@ -8,8 +8,10 @@ import Button from "@/components/ui/Button";
 import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import SplitPreview from "@/components/ui/SplitPreview";
+import PersonChips from "@/components/expenses/PersonChips";
 import { useExpenseStore } from "@/store/expenseStore";
 import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
+import { buildKnownPeople } from "@/lib/people";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 
 const RECENT_CAP = 3;
@@ -35,6 +37,7 @@ export default function NewExpenseForm() {
   const [saving, setSaving] = useState(false);
   const [prefilledFrom, setPrefilledFrom] = useState<string | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
+  const remarkRef = useRef<HTMLInputElement>(null);
 
   // This form needs the store for two things now: the "เพิ่มล่าสุด" list, and
   // resolving ?from=<id> on a cold open.
@@ -72,6 +75,14 @@ export default function NewExpenseForm() {
       .slice(0, RECENT_CAP);
   }, [expenses, date, isLoaded]);
 
+  // Only warn about unfamiliar names once the store has actually loaded.
+  // Before that the list is empty and every name looks new — the empty
+  // default in SplitPreview degrades to "no warnings", which is correct.
+  const knownPeople = useMemo(
+    () => (isLoaded ? buildKnownPeople(expenses) : []),
+    [expenses, isLoaded]
+  );
+
   /** The success banner must not outlive the entry it describes — left up
    *  while the next expense is being typed, it reads as confirmation of THAT
    *  one. Every field change clears it. */
@@ -80,6 +91,16 @@ export default function NewExpenseForm() {
       setSaved(null);
       setter(value);
     };
+  }
+
+  function insertPerson(text: string, caret: number) {
+    edit(setRemark)(text);
+    // After the state commit, put the cursor between the brackets so the
+    // amount can be typed straight away.
+    requestAnimationFrame(() => {
+      remarkRef.current?.focus();
+      remarkRef.current?.setSelectionRange(caret, caret);
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -167,12 +188,14 @@ export default function NewExpenseForm() {
           />
           <div className="flex flex-col gap-2">
             <Input
+              ref={remarkRef}
               label="หมายเหตุ"
               value={remark}
               onChange={(e) => edit(setRemark)(e.target.value)}
               placeholder="(ถ้ามี) เช่น ขนม: [50] ค่าอาหาร"
             />
-            <SplitPreview remark={remark} />
+            <PersonChips known={knownPeople} remark={remark} onInsert={insertPerson} />
+            <SplitPreview remark={remark} knownPeople={knownPeople} />
           </div>
           {error && <p className="text-sm text-accent">{error}</p>}
           {saved && (
