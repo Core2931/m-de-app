@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
@@ -8,10 +8,13 @@ import Button from "@/components/ui/Button";
 import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import SplitPreview from "@/components/ui/SplitPreview";
+import PersonChips, { type RemarkSelection } from "@/components/expenses/PersonChips";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 import { summarizeExpense } from "@/lib/splits";
+import { buildKnownPeople } from "@/lib/people";
+import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { formatCurrency } from "@/lib/formatters";
 
 export default function EditExpensePage() {
@@ -34,6 +37,23 @@ export default function EditExpensePage() {
   const [saving, setSaving] = useState(false);
   const [initializedId, setInitializedId] = useState<string | null>(null);
   const initialized = initializedId === expense?.id;
+  const remarkRef = useRef<HTMLInputElement>(null);
+
+  // Gated on isLoaded so an unloaded store cannot make every name look new.
+  const knownPeople = useMemo(
+    () => (isLoaded ? buildKnownPeople(expenses) : []),
+    [expenses, isLoaded]
+  );
+
+  function insertIntoRemark(text: string, selection: RemarkSelection) {
+    setRemark(text);
+    // Select what needs filling in — empty brackets for a name chip, the "?"
+    // for an even split.
+    requestAnimationFrame(() => {
+      remarkRef.current?.focus();
+      remarkRef.current?.setSelectionRange(selection.start, selection.end);
+    });
+  }
 
   // Derived from the live form fields (not the stored expense) so the
   // breakdown box tracks what the user is typing, matching SplitPreview
@@ -66,6 +86,10 @@ export default function EditExpensePage() {
     }
     if (!Number.isFinite(amountNum) || amountNum <= 0) {
       setError("จำนวนเงินไม่ถูกต้อง");
+      return;
+    }
+    if (hasPlaceholderPerson(remark)) {
+      setError("ใส่ชื่อคนที่หารด้วยก่อนบันทึก");
       return;
     }
     setSaving(true);
@@ -130,8 +154,19 @@ export default function EditExpensePage() {
             </div>
             <Input label="รายการ" value={item} onChange={(e) => setItem(e.target.value)} required />
             <div className="flex flex-col gap-2">
-              <Input label="หมายเหตุ" value={remark} onChange={(e) => setRemark(e.target.value)} />
-              <SplitPreview remark={remark} />
+              <Input
+                ref={remarkRef}
+                label="หมายเหตุ"
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+              <PersonChips
+                known={knownPeople}
+                remark={remark}
+                amount={amount}
+                onInsert={insertIntoRemark}
+              />
+              <SplitPreview remark={remark} knownPeople={knownPeople} />
             </div>
             {error && <p className="text-sm text-accent">{error}</p>}
             {summary && summary.splits.length > 0 && (
@@ -163,6 +198,19 @@ export default function EditExpensePage() {
                 ลบ
               </Button>
             </div>
+            {/* Its own row rather than a third button beside the other two,
+                which would wrap at 375px. A Button + router.push, not a Link
+                styled to match — Button has no asChild, and copying its class
+                string is how the two drift apart. */}
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              onClick={() => router.push(`/expenses/new?from=${encodeURIComponent(params.id)}`)}
+              className="w-full"
+            >
+              ซ้ำรายการนี้
+            </Button>
           </form>
         )}
       </Card>

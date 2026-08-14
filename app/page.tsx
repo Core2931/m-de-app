@@ -7,6 +7,7 @@ import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import Screen from "@/components/layout/Screen";
 import WeekChart from "@/components/home/WeekChart";
+import BudgetCard from "@/components/home/BudgetCard";
 import {
   useExpenseStore,
   selectTotalForDate,
@@ -16,7 +17,9 @@ import {
   selectWeek,
 } from "@/store/expenseStore";
 import { useSettlementStore } from "@/store/settlementStore";
+import { useBudgetStore } from "@/store/budgetStore";
 import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
+import { computeBudgetProgress, findBudgetForMonth } from "@/lib/budgets";
 import { formatCurrency, todayISO, currentMonthISO } from "@/lib/formatters";
 
 const TODAY_CAP = 4;
@@ -38,6 +41,17 @@ export default function DashboardPage() {
     if (!settlementsLoaded) loadSettlements();
   }, [settlementsLoaded, loadSettlements]);
 
+  const {
+    budgets,
+    isLoaded: budgetsLoaded,
+    load: loadBudgets,
+    save: saveBudget,
+  } = useBudgetStore();
+
+  useEffect(() => {
+    if (!budgetsLoaded) loadBudgets();
+  }, [budgetsLoaded, loadBudgets]);
+
   const today = todayISO();
   const month = currentMonthISO();
   const todayTotal = selectTotalForDate(expenses, today);
@@ -48,6 +62,18 @@ export default function DashboardPage() {
   const totals = summarizeBalances(buildPersonBalances(expenses, settlements));
   const hasOutstanding =
     isLoaded && settlementsLoaded && (totals.reserved > 0 || totals.receivable > 0);
+
+  // Measured against myShare, not the raw total: money fronted for other
+  // people is coming back, so a ฿5,000 group dinner should not eat a ฿10,000
+  // budget when it actually cost ฿1,000. myShare deliberately does NOT
+  // subtract borrowed — someone else paying for you still counts, because you
+  // consumed it. Same definition as every other myShare in the app.
+  const budgetProgress = computeBudgetProgress(monthMyShare, findBudgetForMonth(budgets, month));
+
+  // Gated on both stores. A bar rendered before the data lands shows 0% spent,
+  // which reads as "nothing spent this month" — the same lie three earlier
+  // fixes in this app were about.
+  const showBudget = isLoaded && budgetsLoaded;
 
   const todayItems = expenses
     .filter((e) => e.date === today)
@@ -81,6 +107,14 @@ export default function DashboardPage() {
           )}
         </Card>
       </div>
+
+      {showBudget && (
+        <BudgetCard
+          progress={budgetProgress}
+          monthTotal={monthTotal}
+          onSave={(amount) => saveBudget(month, amount)}
+        />
+      )}
 
       {hasOutstanding && (
         <Link href="/people" className="mb-4 block transition-transform active:scale-[0.98]">

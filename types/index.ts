@@ -90,10 +90,25 @@ export interface PersonPeriodTotal {
   entries: SplitEntry[];
 }
 
+export interface Budget {
+  id: string;
+  month: string; // YYYY-MM
+  amount: number;
+  createdAt: string; // ISO timestamp
+}
+
+export interface CategoryTotal {
+  category: Category;
+  total: number; // sum of expense.amount
+  myShare: number; // sum of each expense's own amount - lentOut
+  count: number;
+}
+
 export interface PeriodSummary {
   total: number; // every baht that went through these expenses
   lentOut: number; // of which we fronted for other people
   borrowed: number; // of which other people fronted for us
   myShare: number; // what the slice really cost us = total - lentOut
   people: PersonPeriodTotal[];
+  byCategory: CategoryTotal[]; // only categories actually present in the slice
 }

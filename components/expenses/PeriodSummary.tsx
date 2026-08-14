@@ -4,7 +4,12 @@ import { useState } from "react";
 import Card from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDateShort } from "@/lib/formatters";
-import type { PeriodSummary as PeriodSummaryData, PersonPeriodTotal } from "@/types";
+import { CATEGORY_COLOR_VAR, CATEGORY_LABEL } from "@/lib/categories";
+import type {
+  CategoryTotal,
+  PeriodSummary as PeriodSummaryData,
+  PersonPeriodTotal,
+} from "@/types";
 
 function Row({
   label,
@@ -32,6 +37,42 @@ function Row({
       >
         {formatCurrency(value)}
       </span>
+    </div>
+  );
+}
+
+function CategoryRow({ entry, total }: { entry: CategoryTotal; total: number }) {
+  // Guard the divide: an all-zero slice would otherwise put "NaN%" in the DOM.
+  const pct = total > 0 ? (entry.total / total) * 100 : 0;
+  const color = CATEGORY_COLOR_VAR[entry.category];
+
+  return (
+    <div className="py-1.5">
+      <div className="flex items-baseline gap-2">
+        <span
+          className="h-2.5 w-2.5 shrink-0 translate-y-px rounded-full"
+          style={{ background: color }}
+        />
+        <span className="flex-1 truncate text-[14px] text-text">
+          {CATEGORY_LABEL[entry.category]}
+        </span>
+        <span className="text-[14px] font-semibold tabular-nums text-text">
+          {formatCurrency(entry.total)}
+        </span>
+      </div>
+      {/* Width is data, so it lives in an inline style — Tailwind's scanner
+          cannot generate a w-[…] class that only exists at runtime, and cn()
+          has no tailwind-merge to resolve a conflict anyway. Same approach as
+          WeekChart's bars. */}
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-border">
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${Math.min(100, pct)}%`, background: color }}
+        />
+      </div>
+      {entry.myShare !== entry.total && (
+        <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(entry.myShare)}</p>
+      )}
     </div>
   );
 }
@@ -119,6 +160,15 @@ export default function PeriodSummary({ summary, scopeLabel }: PeriodSummaryProp
       {summary.lentOut > 0 && (
         <div className="mt-1 border-t border-border pt-1">
           <Row label="ของฉันจริงๆ" value={summary.myShare} />
+        </div>
+      )}
+
+      {summary.byCategory.length > 1 && (
+        <div className="mt-3 border-t border-border pt-2">
+          <p className="mb-1 text-[12px] font-medium text-sub">แยกตามหมวด</p>
+          {summary.byCategory.map((entry) => (
+            <CategoryRow key={entry.category} entry={entry} total={summary.total} />
+          ))}
         </div>
       )}
 

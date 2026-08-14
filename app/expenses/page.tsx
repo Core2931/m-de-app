@@ -1,36 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
+import Input from "@/components/ui/Input";
 import Avatar from "@/components/ui/Avatar";
 import DateField from "@/components/ui/DateField";
 import Screen from "@/components/layout/Screen";
 import CategoryFilter from "@/components/expenses/CategoryFilter";
 import PeriodSummary from "@/components/expenses/PeriodSummary";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
-import { formatCurrency, formatDate, formatDateShort, monthStartISO } from "@/lib/formatters";
+import { formatCurrency, formatDate, monthStartISO } from "@/lib/formatters";
 import { summarizeExpense } from "@/lib/splits";
 import { summarizePeriod } from "@/lib/periodSplits";
-import { CATEGORY_LABEL, type Category } from "@/lib/categories";
-
-/** Spells out what the summary numbers cover so a filtered total is never
- *  mistaken for the all-time one. */
-function buildScopeLabel(from: string, to: string, categories: Category[]): string {
-  const parts: string[] = [];
-  if (from && to) parts.push(`${formatDateShort(from)} – ${formatDateShort(to)}`);
-  else if (from) parts.push(`ตั้งแต่ ${formatDateShort(from)}`);
-  else if (to) parts.push(`ถึง ${formatDateShort(to)}`);
-  else parts.push("ทั้งหมด");
-  if (categories.length > 0) parts.push(categories.map((c) => CATEGORY_LABEL[c]).join(", "));
-  return parts.join(" · ");
-}
+import { buildScopeLabel } from "@/lib/scopeLabel";
+import { matchesQuery, parseQuery } from "@/lib/search";
+import { type Category } from "@/lib/categories";
 
 export default function ExpensesPage() {
   const { expenses, isLoaded, isLoading, error, load } = useExpenseStore();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [query, setQuery] = useState("");
+  // Every keystroke re-runs summarizePeriod over the survivors, which parses
+  // each remark with three regexes. Deferring keeps the field itself typing at
+  // full speed while the list catches up.
+  const deferredQuery = useDeferredValue(query);
 
   // Opens on the current month instead of the whole sheet. Seeded from an
   // effect rather than useState's initializer because this route is statically
@@ -52,21 +48,26 @@ export default function ExpensesPage() {
     if (!isLoaded) load();
   }, [isLoaded, load]);
 
+  const terms = useMemo(() => parseQuery(deferredQuery), [deferredQuery]);
+
   const filtered = useMemo(() => {
     return expenses.filter((e) => {
       if (from && e.date < from) return false;
       if (to && e.date > to) return false;
       // Empty selection means "no category filter", not "match nothing".
       if (categories.length > 0 && !categories.includes(e.category)) return false;
+      // Last on purpose: the cheap date and category rejects run first, so the
+      // string work only touches rows that already survived them.
+      if (!matchesQuery(e, terms)) return false;
       return true;
     });
-  }, [expenses, from, to, categories]);
+  }, [expenses, from, to, categories, terms]);
 
   const dailyTotals = useMemo(() => selectDailyTotals(filtered), [filtered]);
   const period = useMemo(() => summarizePeriod(filtered), [filtered]);
   const scopeLabel = useMemo(
-    () => buildScopeLabel(from, to, categories),
-    [from, to, categories]
+    () => buildScopeLabel({ from, to, categories, query: deferredQuery }),
+    [from, to, categories, deferredQuery]
   );
 
   return (
@@ -76,6 +77,17 @@ export default function ExpensesPage() {
       <div className="mb-3 grid grid-cols-2 gap-3">
         <DateField label="จากวันที่" value={from} onChange={setFrom} filled align="left" />
         <DateField label="ถึงวันที่" value={to} onChange={setTo} filled align="right" />
+      </div>
+
+      <div className="mb-3">
+        <Input
+          type="search"
+          filled
+          placeholder="ค้นหารายการหรือหมายเหตุ"
+          aria-label="ค้นหารายการ"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </div>
 
       <div className="mb-4">

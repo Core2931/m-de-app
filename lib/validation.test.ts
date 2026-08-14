@@ -1,5 +1,96 @@
 import { describe, expect, it } from "vitest";
-import { validateSettlementInput } from "@/lib/validation";
+import {
+  validateBudgetInput,
+  validateExpenseInput,
+  validateSettlementInput,
+} from "@/lib/validation";
+
+describe("validateBudgetInput", () => {
+  it("รับเดือนกับจำนวนที่ถูกต้อง", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: 10000 })).toEqual({
+      month: "2026-08",
+      amount: 10000,
+    });
+  });
+
+  it("amount null คือการล้างงบ ไม่ใช่ค่าผิด", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: null })).toEqual({
+      month: "2026-08",
+      amount: null,
+    });
+  });
+
+  it("ปัดเป็นสองตำแหน่ง", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: 1234.567 })?.amount).toBe(1234.57);
+  });
+
+  it("ปฏิเสธรูปแบบเดือนที่ผิด", () => {
+    expect(validateBudgetInput({ month: "2026-8", amount: 100 })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08-01", amount: 100 })).toBeNull();
+  });
+
+  it("ปฏิเสธจำนวนที่ใช้ไม่ได้", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: 0 })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: -5 })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: "100" })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: NaN })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: 1e10 })).toBeNull();
+  });
+
+  it("ปฏิเสธ body ที่ไม่ใช่ object", () => {
+    expect(validateBudgetInput(null)).toBeNull();
+    expect(validateBudgetInput("x")).toBeNull();
+  });
+});
+
+describe("validateExpenseInput", () => {
+  const valid = {
+    date: "2026-07-20",
+    item: "  ข้าวเที่ยง  ",
+    amount: 120.5,
+    remark: "  ขนม: [50] ข้าว  ",
+    category: "food",
+  };
+
+  it("รับข้อมูลที่ถูกต้อง และ trim item กับ remark", () => {
+    expect(validateExpenseInput(valid)).toEqual({
+      date: "2026-07-20",
+      item: "ข้าวเที่ยง",
+      amount: 120.5,
+      remark: "ขนม: [50] ข้าว",
+      category: "food",
+    });
+  });
+
+  it("ปฏิเสธหมายเหตุที่ยังมี ? ค้างอยู่", () => {
+    // "?" ที่หลุดลงชีตจะกลายเป็นคนผีถาวรในยอดค้างหน้า /people
+    // ฟอร์มกันไว้แล้ว แต่ตรงนี้ทำให้ POST ตรงก็ทะลุไม่ได้
+    expect(validateExpenseInput({ ...valid, remark: "?: [50] " })).toBeNull();
+    expect(validateExpenseInput({ ...valid, remark: "ขนม: [20]; ?: [50] " })).toBeNull();
+  });
+
+  it("? ที่อยู่ใน label ไม่ใช่ placeholder ต้องผ่าน", () => {
+    expect(validateExpenseInput({ ...valid, remark: "ขนม: [50] ค่าอะไร?" })).not.toBeNull();
+  });
+
+  it("ปฏิเสธวันที่ผิดรูปแบบ", () => {
+    expect(validateExpenseInput({ ...valid, date: "20/07/2026" })).toBeNull();
+  });
+
+  it("ปฏิเสธรายการว่าง", () => {
+    expect(validateExpenseInput({ ...valid, item: "   " })).toBeNull();
+  });
+
+  it("ปฏิเสธจำนวนเงินที่ใช้ไม่ได้", () => {
+    expect(validateExpenseInput({ ...valid, amount: 0 })).toBeNull();
+    expect(validateExpenseInput({ ...valid, amount: -5 })).toBeNull();
+    expect(validateExpenseInput({ ...valid, amount: "120" })).toBeNull();
+  });
+
+  it("หมวดที่ไม่รู้จักตกกลับเป็นค่าเริ่มต้น", () => {
+    expect(validateExpenseInput({ ...valid, category: "ห้วย" })?.category).toBe("food");
+  });
+});
 
 // validateSettlementInput is the only thing standing between an untrusted
 // request body and a row written into the settlements tab, so every rejection

@@ -4,6 +4,11 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   /** Filter/List inputs sit on a card surface; form inputs stay transparent. */
   filled?: boolean;
+  /** Lets a caller focus or select inside the field — used by the add form to
+   *  put the cursor back on the amount after a save. React 19 passes `ref`
+   *  through as an ordinary prop, so it just rides along with the spread and
+   *  no forwardRef wrapper is needed. */
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 export default function Input({ label, className, id, filled, ...props }: InputProps) {
