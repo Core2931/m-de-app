@@ -8,12 +8,13 @@ import Button from "@/components/ui/Button";
 import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import SplitPreview from "@/components/ui/SplitPreview";
-import PersonChips from "@/components/expenses/PersonChips";
+import PersonChips, { type RemarkSelection } from "@/components/expenses/PersonChips";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 import { summarizeExpense } from "@/lib/splits";
 import { buildKnownPeople } from "@/lib/people";
+import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { formatCurrency } from "@/lib/formatters";
 
 export default function EditExpensePage() {
@@ -44,11 +45,13 @@ export default function EditExpensePage() {
     [expenses, isLoaded]
   );
 
-  function insertPerson(text: string, caret: number) {
+  function insertIntoRemark(text: string, selection: RemarkSelection) {
     setRemark(text);
+    // Select what needs filling in — empty brackets for a name chip, the "?"
+    // for an even split.
     requestAnimationFrame(() => {
       remarkRef.current?.focus();
-      remarkRef.current?.setSelectionRange(caret, caret);
+      remarkRef.current?.setSelectionRange(selection.start, selection.end);
     });
   }
 
@@ -83,6 +86,10 @@ export default function EditExpensePage() {
     }
     if (!Number.isFinite(amountNum) || amountNum <= 0) {
       setError("จำนวนเงินไม่ถูกต้อง");
+      return;
+    }
+    if (hasPlaceholderPerson(remark)) {
+      setError("ใส่ชื่อคนที่หารด้วยก่อนบันทึก");
       return;
     }
     setSaving(true);
@@ -153,7 +160,12 @@ export default function EditExpensePage() {
                 value={remark}
                 onChange={(e) => setRemark(e.target.value)}
               />
-              <PersonChips known={knownPeople} remark={remark} onInsert={insertPerson} />
+              <PersonChips
+                known={knownPeople}
+                remark={remark}
+                amount={amount}
+                onInsert={insertIntoRemark}
+              />
               <SplitPreview remark={remark} knownPeople={knownPeople} />
             </div>
             {error && <p className="text-sm text-accent">{error}</p>}

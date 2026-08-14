@@ -3,6 +3,7 @@
 import { parseRemark } from "@/lib/splits";
 import { formatCurrency } from "@/lib/formatters";
 import { isKnownPerson, nearestPerson, type KnownPerson } from "@/lib/people";
+import { PLACEHOLDER_PERSON, hasPlaceholderPerson } from "@/lib/evenSplit";
 
 interface SplitPreviewProps {
   remark: string;
@@ -21,9 +22,18 @@ export default function SplitPreview({ remark, knownPeople = [] }: SplitPreviewP
   const { splits, invalid } = parseRemark(remark);
   if (splits.length === 0 && !invalid) return null;
 
+  const needsNames = hasPlaceholderPerson(remark);
   const canWarn = knownPeople.length > 0;
   const unknownNames = canWarn
-    ? [...new Set(splits.map((s) => s.person).filter((p) => !isKnownPerson(p, knownPeople)))]
+    ? [
+        ...new Set(
+          splits
+            .map((s) => s.person)
+            // The "?" placeholder gets its own, louder message below — calling
+            // it a new person would be nonsense.
+            .filter((p) => p !== PLACEHOLDER_PERSON && !isKnownPerson(p, knownPeople))
+        ),
+      ]
     : [];
 
   return (
@@ -31,7 +41,9 @@ export default function SplitPreview({ remark, knownPeople = [] }: SplitPreviewP
       {splits.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {splits.map((split, i) => {
-            const isNew = canWarn && !isKnownPerson(split.person, knownPeople);
+            const isPlaceholder = split.person === PLACEHOLDER_PERSON;
+            const isNew =
+              isPlaceholder || (canWarn && !isKnownPerson(split.person, knownPeople));
             const tone = split.direction === "owed_to_me" ? "accent" : "expense";
             return (
               <span
@@ -51,6 +63,12 @@ export default function SplitPreview({ remark, knownPeople = [] }: SplitPreviewP
             );
           })}
         </div>
+      )}
+
+      {needsNames && (
+        <p className="text-[12px] text-expense">
+          แทน <span className="font-medium">?</span> ด้วยชื่อคนที่หารด้วยก่อนบันทึก
+        </p>
       )}
 
       {/* Informational only. Never rewrite the remark from this — ป้อม and
