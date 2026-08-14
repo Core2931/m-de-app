@@ -163,6 +163,19 @@ export default function EditExpensePage() {
                 ลบ
               </Button>
             </div>
+            {/* Its own row rather than a third button beside the other two,
+                which would wrap at 375px. A Button + router.push, not a Link
+                styled to match — Button has no asChild, and copying its class
+                string is how the two drift apart. */}
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              onClick={() => router.push(`/expenses/new?from=${encodeURIComponent(params.id)}`)}
+              className="w-full"
+            >
+              ซ้ำรายการนี้
+            </Button>
           </form>
         )}
       </Card>
