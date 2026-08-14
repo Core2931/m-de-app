@@ -40,6 +40,12 @@ export function currentMonthISO(): string {
   return todayISO().slice(0, 7); // YYYY-MM
 }
 
+// First day of the current month — the List screen opens on this so a sheet
+// that has been running for years doesn't render every row it ever held.
+export function monthStartISO(): string {
+  return `${currentMonthISO()}-01`;
+}
+
 function toISODate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");

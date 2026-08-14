@@ -6,15 +6,48 @@ import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import DateField from "@/components/ui/DateField";
 import Screen from "@/components/layout/Screen";
+import CategoryFilter from "@/components/expenses/CategoryFilter";
+import PeriodSummary from "@/components/expenses/PeriodSummary";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatDate, formatDateShort, monthStartISO } from "@/lib/formatters";
 import { summarizeExpense } from "@/lib/splits";
+import { summarizePeriod } from "@/lib/periodSplits";
+import { CATEGORY_LABEL, type Category } from "@/lib/categories";
+
+/** Spells out what the summary numbers cover so a filtered total is never
+ *  mistaken for the all-time one. */
+function buildScopeLabel(from: string, to: string, categories: Category[]): string {
+  const parts: string[] = [];
+  if (from && to) parts.push(`${formatDateShort(from)} – ${formatDateShort(to)}`);
+  else if (from) parts.push(`ตั้งแต่ ${formatDateShort(from)}`);
+  else if (to) parts.push(`ถึง ${formatDateShort(to)}`);
+  else parts.push("ทั้งหมด");
+  if (categories.length > 0) parts.push(categories.map((c) => CATEGORY_LABEL[c]).join(", "));
+  return parts.join(" · ");
+}
 
 export default function ExpensesPage() {
   const { expenses, isLoaded, isLoading, error, load } = useExpenseStore();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
 
+  // Opens on the current month instead of the whole sheet. Seeded from an
+  // effect rather than useState's initializer because this route is statically
+  // prerendered: reading "now" during render would bake the build-time month
+  // into the HTML and mismatch the visitor's month on hydration. Running
+  // client-only costs nothing visually — the store is still empty on first
+  // paint, so the list never flashes unfiltered. Empty deps on purpose: this
+  // seeds once, and clearing the field afterwards must stay cleared.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFrom(monthStartISO());
+  }, []);
+
+  // Always loads every expense, never just the visible range: /people derives
+  // balances and Home derives the week chart from this same store, and whoever
+  // mounts first wins the `!isLoaded` race. Narrowing the fetch here would
+  // silently reduce those screens to one month of history.
   useEffect(() => {
     if (!isLoaded) load();
   }, [isLoaded, load]);
@@ -23,27 +56,36 @@ export default function ExpensesPage() {
     return expenses.filter((e) => {
       if (from && e.date < from) return false;
       if (to && e.date > to) return false;
+      // Empty selection means "no category filter", not "match nothing".
+      if (categories.length > 0 && !categories.includes(e.category)) return false;
       return true;
     });
-  }, [expenses, from, to]);
+  }, [expenses, from, to, categories]);
 
   const dailyTotals = useMemo(() => selectDailyTotals(filtered), [filtered]);
-  const rangeTotal = filtered.reduce((sum, e) => sum + e.amount, 0);
+  const period = useMemo(() => summarizePeriod(filtered), [filtered]);
+  const scopeLabel = useMemo(
+    () => buildScopeLabel(from, to, categories),
+    [from, to, categories]
+  );
 
   return (
     <Screen>
       <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการรายจ่าย</h1>
 
-      <div className="mb-4 grid grid-cols-2 gap-3">
+      <div className="mb-3 grid grid-cols-2 gap-3">
         <DateField label="จากวันที่" value={from} onChange={setFrom} filled align="left" />
         <DateField label="ถึงวันที่" value={to} onChange={setTo} filled align="right" />
       </div>
 
-      {(from || to) && (
-        <p className="mb-4 text-sm text-sub">
-          รวมช่วงที่เลือก:{" "}
-          <span className="font-semibold text-text">{formatCurrency(rangeTotal)}</span>
-        </p>
+      <div className="mb-4">
+        <CategoryFilter selected={categories} onChange={setCategories} />
+      </div>
+
+      {/* Gated on isLoaded, not just on filtered.length — before load() resolves
+          the store is empty, and a ฿0 summary reads as a real answer. */}
+      {isLoaded && filtered.length > 0 && (
+        <PeriodSummary summary={period} scopeLabel={scopeLabel} />
       )}
 
       {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}

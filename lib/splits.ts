@@ -12,7 +12,7 @@ const PAYER_SUFFIX_RE = /จ่าย$/;
 export const EPSILON = 0.005;
 
 /** Collapses float dust to a clean 0 so the UI never renders "-฿0". */
-function snapZero(value: number): number {
+export function snapZero(value: number): number {
   return Math.abs(value) < EPSILON ? 0 : value;
 }
 

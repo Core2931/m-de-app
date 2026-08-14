@@ -1,6 +1,7 @@
-export type Category = "food" | "transport" | "life" | "other";
+export type Category = "food" | "transport" | "life" | "goods" | "other";
 
-export const CATEGORIES: Category[] = ["food", "transport", "life", "other"];
+// Drives the picker and filter order, so "other" stays last.
+export const CATEGORIES: Category[] = ["food", "transport", "life", "goods", "other"];
 
 export const DEFAULT_CATEGORY: Category = "food";
 
@@ -9,6 +10,7 @@ export const CATEGORY_INIT: Record<Category, string> = {
   food: "อาหา",
   transport: "เดินท",
   life: "ไลฟ์ส",
+  goods: "ของใช",
   other: "อื่นๆ"
 };
 
@@ -16,6 +18,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   food: "อาหาร",
   transport: "เดินทาง",
   life: "ไลฟ์สไตล์",
+  goods: "ของใช้",
   other: "อื่นๆ",
 };
 
@@ -24,11 +27,15 @@ export const CATEGORY_COLOR_VAR: Record<Category, string> = {
   food: "var(--food)",
   transport: "var(--transport)",
   life: "var(--life)",
+  goods: "var(--goods)",
   other: "var(--other)",
 };
 
+// Derived from CATEGORIES rather than a hand-written chain: a category added to
+// the list but forgotten here would make every stored row of that kind fail the
+// guard and silently come back as "food".
 export function isCategory(value: unknown): value is Category {
-  return value === "food" || value === "transport" || value === "life" || value === "other";
+  return typeof value === "string" && (CATEGORIES as string[]).includes(value);
 }
 
 export function toCategory(value: unknown): Category {
