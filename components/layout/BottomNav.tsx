@@ -3,12 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-
-const tabs = [
-  { href: "/", label: "หน้าหลัก" },
-  { href: "/expenses", label: "รายการ" },
-  { href: "/expenses/new", label: "เพิ่ม" },
-];
+import { NAV_TABS, isTabActive } from "@/lib/nav";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -20,12 +15,8 @@ export default function BottomNav() {
           className="mb-5 flex rounded-[26px] bg-nav px-2 py-[10px]"
           style={{ boxShadow: "0 12px 28px rgba(0,0,0,0.16)" }}
         >
-          {tabs.map(({ href, label }) => {
-            let isActive: boolean;
-            if (href === "/") isActive = pathname === "/";
-            else if (href === "/expenses/new") isActive = pathname === "/expenses/new";
-            // List tab owns /expenses and the edit route, but not the add route.
-            else isActive = pathname.startsWith("/expenses") && pathname !== "/expenses/new";
+          {NAV_TABS.map(({ href, label }) => {
+            const isActive = isTabActive(href, pathname);
             return (
               <Link
                 key={href}
@@ -34,7 +25,7 @@ export default function BottomNav() {
               >
                 <span
                   className={cn(
-                    "text-sm font-semibold",
+                    "whitespace-nowrap text-sm font-semibold",
                     isActive ? "text-accent" : "text-sub"
                   )}
                 >
