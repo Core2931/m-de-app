@@ -22,6 +22,7 @@
   --color-food: var(--food);
   --color-transport: var(--transport);
   --color-life: var(--life);
+  --color-goods: var(--goods);
   --color-other: var(--other);
 
   --shadow-card: var(--shadow);
@@ -46,6 +47,9 @@
   --food: oklch(0.88 0.08 40);
   --transport: oklch(0.88 0.06 230);
   --life: oklch(0.88 0.06 300);
+  /* Hue 95 sits in the wide gap between food (40) and other (150) so the five
+     avatars stay tellable apart at 34px. */
+  --goods: oklch(0.88 0.07 95);
   --other: oklch(0.88 0.05 150);
 }
 
@@ -66,6 +70,7 @@
   --food: #334155;
   --transport: #1e3a4a;
   --life: #3b2e4a;
+  --goods: oklch(0.42 0.05 95);
   --other: oklch(0.42 0.05 150);
 }
 

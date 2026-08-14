@@ -75,3 +75,25 @@ export interface BalanceTotals {
   reserved: number; // we are obligated to pay this amount
   receivable: number; // we will receive this amount
 }
+
+/**
+ * One person's split activity inside a filtered slice of expenses. Gross on
+ * purpose — settlements are not netted here because a repayment covers a debt,
+ * not a date range, so subtracting one would make the number depend on which
+ * range happened to be on screen. Net-of-settlement lives on /people.
+ */
+export interface PersonPeriodTotal {
+  person: string;
+  lentOut: number; // we fronted this much for them
+  borrowed: number; // they fronted this much for us
+  net: number; // lentOut - borrowed; positive means they owe us
+  entries: SplitEntry[];
+}
+
+export interface PeriodSummary {
+  total: number; // every baht that went through these expenses
+  lentOut: number; // of which we fronted for other people
+  borrowed: number; // of which other people fronted for us
+  myShare: number; // what the slice really cost us = total - lentOut
+  people: PersonPeriodTotal[];
+}
