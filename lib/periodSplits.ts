@@ -1,5 +1,12 @@
 import { snapZero, summarizeExpense } from "@/lib/splits";
-import type { Expense, PeriodSummary, PersonPeriodTotal, SplitEntry } from "@/types";
+import { CATEGORIES, type Category } from "@/lib/categories";
+import type {
+  CategoryTotal,
+  Expense,
+  PeriodSummary,
+  PersonPeriodTotal,
+  SplitEntry,
+} from "@/types";
 
 /**
  * Rolls a filtered slice of expenses up into "what did this range cost me, and
@@ -14,6 +21,7 @@ import type { Expense, PeriodSummary, PersonPeriodTotal, SplitEntry } from "@/ty
  */
 export function summarizePeriod(expenses: Expense[]): PeriodSummary {
   const byPerson = new Map<string, PersonPeriodTotal>();
+  const byCategoryMap = new Map<Category, CategoryTotal>();
   let total = 0;
   let lentOut = 0;
   let borrowed = 0;
@@ -23,6 +31,20 @@ export function summarizePeriod(expenses: Expense[]): PeriodSummary {
     total += expense.amount;
     lentOut += summary.lentOut;
     borrowed += summary.borrowed;
+
+    // Accumulated in this same pass on purpose: summarizeExpense() runs three
+    // regexes over the remark, so a second loop would double that cost for
+    // numbers we already hold. myShare is summed PER EXPENSE — deriving it as
+    // "category total minus the period's lentOut" would spread one category's
+    // lending across all of them.
+    let categoryTotal = byCategoryMap.get(expense.category);
+    if (!categoryTotal) {
+      categoryTotal = { category: expense.category, total: 0, myShare: 0, count: 0 };
+      byCategoryMap.set(expense.category, categoryTotal);
+    }
+    categoryTotal.total += expense.amount;
+    categoryTotal.myShare += summary.myShare;
+    categoryTotal.count += 1;
 
     for (const split of summary.splits) {
       let person = byPerson.get(split.person);
@@ -60,11 +82,22 @@ export function summarizePeriod(expenses: Expense[]): PeriodSummary {
       a.person.localeCompare(b.person, "th")
   );
 
+  // Biggest spend first. Ties break on the CATEGORIES order — the same order
+  // the picker and the filter chips use — rather than on the Thai label, which
+  // would shuffle these rows out of step with the chips right above them.
+  const byCategory = [...byCategoryMap.values()]
+    .map((c) => ({ ...c, total: snapZero(c.total), myShare: snapZero(c.myShare) }))
+    .sort(
+      (a, b) =>
+        b.total - a.total || CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category)
+    );
+
   return {
     total: snapZero(total),
     lentOut: snapZero(lentOut),
     borrowed: snapZero(borrowed),
     myShare: snapZero(total - lentOut),
     people,
+    byCategory,
   };
 }
