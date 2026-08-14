@@ -90,6 +90,13 @@ export interface PersonPeriodTotal {
   entries: SplitEntry[];
 }
 
+export interface Budget {
+  id: string;
+  month: string; // YYYY-MM
+  amount: number;
+  createdAt: string; // ISO timestamp
+}
+
 export interface CategoryTotal {
   category: Category;
   total: number; // sum of expense.amount

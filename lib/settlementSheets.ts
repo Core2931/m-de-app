@@ -1,5 +1,11 @@
 import type { NewSettlement, Settlement, SettlementDirection } from "@/types";
-import { getSheetsClient, getSheetId, getSheetGid, findRowNumber } from "@/lib/sheetsClient";
+import {
+  getSheetsClient,
+  getSheetId,
+  getSheetGid,
+  findRowNumber,
+  isMissingTab,
+} from "@/lib/sheetsClient";
 
 const SHEET_NAME = "settlements";
 const RANGE_ALL = `${SHEET_NAME}!A2:G`;
@@ -35,17 +41,10 @@ function settlementToRow(settlement: Settlement): string[] {
   ];
 }
 
-// The tab is created by hand; treat a missing tab as "no settlements yet"
-// so the app still works before it exists. Only match the range-parse error
-// Sheets throws for an unknown tab name — a generic "not found" also covers
-// an invalid/revoked spreadsheet ID, which must surface as a real error
-// instead of being silently reported as an empty settlements list.
-// Exported only so lib/settlementSheets.test.ts can pin this regex down: it is
-// the whole difference between "tab not created yet" and "GOOGLE_SHEET_ID is
-// wrong", and widening it would silently turn config errors into empty lists.
-export function isMissingTab(err: unknown): boolean {
-  return err instanceof Error && /Unable to parse range/i.test(err.message);
-}
+// Moved to lib/sheetsClient.ts once the budgets tab needed the same guard.
+// Re-exported here so lib/settlementSheets.test.ts — which pins the regex
+// down — keeps working unchanged.
+export { isMissingTab } from "@/lib/sheetsClient";
 
 export async function readAllSettlements(): Promise<Settlement[]> {
   const sheets = getSheetsClient();

@@ -25,6 +25,20 @@ export function getSheetId(): string {
   return id;
 }
 
+// Hand-created tabs (settlements, budgets) should degrade to "nothing here
+// yet" so the app still works before they exist. Only match the range-parse
+// error Sheets throws for an unknown tab name — a generic "not found" also
+// covers an invalid/revoked spreadsheet ID, which must surface as a real error
+// instead of being silently reported as an empty list.
+//
+// Pinned down by lib/settlementSheets.test.ts: this regex is the whole
+// difference between "tab not created yet" and "GOOGLE_SHEET_ID is wrong", and
+// widening it would silently turn config errors into empty lists. Lives here
+// rather than in one tab module so the two cannot drift apart.
+export function isMissingTab(err: unknown): boolean {
+  return err instanceof Error && /Unable to parse range/i.test(err.message);
+}
+
 export async function getSheetGid(sheetName: string): Promise<number> {
   const sheets = getSheetsClient();
   const res = await sheets.spreadsheets.get({ spreadsheetId: getSheetId() });

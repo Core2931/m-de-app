@@ -1,5 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { validateExpenseInput, validateSettlementInput } from "@/lib/validation";
+import {
+  validateBudgetInput,
+  validateExpenseInput,
+  validateSettlementInput,
+} from "@/lib/validation";
+
+describe("validateBudgetInput", () => {
+  it("รับเดือนกับจำนวนที่ถูกต้อง", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: 10000 })).toEqual({
+      month: "2026-08",
+      amount: 10000,
+    });
+  });
+
+  it("amount null คือการล้างงบ ไม่ใช่ค่าผิด", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: null })).toEqual({
+      month: "2026-08",
+      amount: null,
+    });
+  });
+
+  it("ปัดเป็นสองตำแหน่ง", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: 1234.567 })?.amount).toBe(1234.57);
+  });
+
+  it("ปฏิเสธรูปแบบเดือนที่ผิด", () => {
+    expect(validateBudgetInput({ month: "2026-8", amount: 100 })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08-01", amount: 100 })).toBeNull();
+  });
+
+  it("ปฏิเสธจำนวนที่ใช้ไม่ได้", () => {
+    expect(validateBudgetInput({ month: "2026-08", amount: 0 })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: -5 })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: "100" })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: NaN })).toBeNull();
+    expect(validateBudgetInput({ month: "2026-08", amount: 1e10 })).toBeNull();
+  });
+
+  it("ปฏิเสธ body ที่ไม่ใช่ object", () => {
+    expect(validateBudgetInput(null)).toBeNull();
+    expect(validateBudgetInput("x")).toBeNull();
+  });
+});
 
 describe("validateExpenseInput", () => {
   const valid = {
