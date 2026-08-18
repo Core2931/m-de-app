@@ -10,7 +10,7 @@ export const CATEGORY_INIT: Record<Category, string> = {
   food: "อาหา",
   transport: "เดินท",
   life: "ไลฟ์ส",
-  goods: "ของใช",
+  goods: "ของใ",
   other: "อื่นๆ"
 };
 
