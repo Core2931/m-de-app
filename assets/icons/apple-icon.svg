@@ -1,0 +1,17 @@
+<!-- Source for app/apple-icon.png. Square corners on purpose: iOS applies its
+     own squircle mask to home-screen icons, so a self-rounded artwork ends up
+     double-rounded with a dark sliver at each corner. -->
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="2" height="2" patternUnits="userSpaceOnUse">
+      <path d="M2 0V2M0 2H2" stroke="#EDEAE4" stroke-opacity=".075" stroke-width=".14"/>
+    </pattern>
+  </defs>
+  <rect width="24" height="24" fill="#131C26"/>
+  <rect width="24" height="24" fill="url(#grid)"/>
+  <g transform="translate(12 12) scale(.74) translate(-12 -12)">
+    <rect x="2"  y="14" width="4" height="8"  rx="2" fill="#EDEAE4" fill-opacity=".30"/>
+    <rect x="10" y="9"  width="4" height="13" rx="2" fill="#EDEAE4" fill-opacity=".52"/>
+    <path d="M18 6 L22 2 L22 20 A2 2 0 0 1 18 20 Z" fill="#F26419"/>
+  </g>
+</svg>

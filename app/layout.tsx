@@ -11,10 +11,9 @@ const ibmPlexThai = IBM_Plex_Sans_Thai({
 export const metadata: Metadata = {
   title: "รายจ่ายรายวัน",
   description: "จดรายจ่ายรายวัน เก็บข้อมูลใน Google Sheet",
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
+  // No icons field on purpose: app/icon.svg and app/apple-icon.png are picked
+  // up by Next's file convention, which fingerprints them so a changed icon is
+  // not served from a stale cache. Literal paths here would bypass that.
   appleWebApp: {
     title: "รายจ่ายรายวัน",
     statusBarStyle: "default",
