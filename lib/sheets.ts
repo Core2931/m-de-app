@@ -1,35 +1,9 @@
 import type { Expense, NewExpense } from "@/types";
-import { toCategory } from "@/lib/categories";
+import { expenseToCoreRow, expenseToRow, rowToExpense } from "@/lib/expenseRows";
 import { getSheetsClient, getSheetId, getSheetGid, findRowNumber } from "@/lib/sheetsClient";
 
 const SHEET_NAME = "expenses";
-const RANGE_ALL = `${SHEET_NAME}!A2:G`;
-
-function rowToExpense(row: string[]): Expense {
-  // Legacy rows written before the category column exist without column G.
-  const [id, date, item, amount, remark, createdAt, category] = row;
-  return {
-    id,
-    date,
-    item,
-    amount: Number(amount) || 0,
-    remark: remark ?? "",
-    createdAt,
-    category: toCategory(category),
-  };
-}
-
-function expenseToRow(expense: Expense): string[] {
-  return [
-    expense.id,
-    expense.date,
-    expense.item,
-    String(expense.amount),
-    expense.remark ?? "",
-    expense.createdAt,
-    expense.category,
-  ];
-}
+const RANGE_ALL = `${SHEET_NAME}!A2:H`;
 
 export async function readAllExpenses(): Promise<Expense[]> {
   const sheets = getSheetsClient();
@@ -61,17 +35,30 @@ export async function updateExpense(id: string, input: NewExpense): Promise<Expe
   const rowNumber = await findRowNumber(SHEET_NAME, id);
   if (rowNumber === null) return null;
   const sheets = getSheetsClient();
+  // F = createdAt, H = payee. Both belong to the row, not to the edit, so they
+  // are read back and carried over rather than taken from the request.
   const existing = await sheets.spreadsheets.values.get({
     spreadsheetId: getSheetId(),
-    range: `${SHEET_NAME}!F${rowNumber}`,
+    range: `${SHEET_NAME}!F${rowNumber}:H${rowNumber}`,
   });
-  const createdAt = (existing.data.values?.[0]?.[0] as string | undefined) ?? new Date().toISOString();
-  const expense: Expense = { id, createdAt, ...input };
+  const stored = (existing.data.values?.[0] ?? []) as string[];
+  const createdAt = stored[0] ?? new Date().toISOString();
+  const payee = stored[2];
+  const expense: Expense = {
+    id,
+    createdAt,
+    date: input.date,
+    item: input.item,
+    amount: input.amount,
+    remark: input.remark,
+    category: input.category,
+    ...(payee ? { payee } : {}),
+  };
   await sheets.spreadsheets.values.update({
     spreadsheetId: getSheetId(),
     range: `${SHEET_NAME}!A${rowNumber}:G${rowNumber}`,
     valueInputOption: "USER_ENTERED",
-    requestBody: { values: [expenseToRow(expense)] },
+    requestBody: { values: [expenseToCoreRow(expense)] },
   });
   return expense;
 }

@@ -28,10 +28,10 @@ export default function ThemeToggle() {
       role="switch"
       aria-checked={dark}
       aria-label="สลับโหมดสว่าง/มืด"
-      className="relative h-[26px] w-12 shrink-0 rounded-[13px] bg-accent-soft"
+      className="relative h-[26px] w-12 shrink-0 rounded-[13px] bg-ember-soft"
     >
       <span
-        className="absolute top-[2px] left-[2px] h-[22px] w-[22px] rounded-full bg-accent transition-transform duration-200"
+        className="absolute top-[2px] left-[2px] h-[22px] w-[22px] rounded-full bg-ember transition-transform duration-200"
         style={{ transform: dark ? "translateX(22px)" : "translateX(0)" }}
       />
     </button>

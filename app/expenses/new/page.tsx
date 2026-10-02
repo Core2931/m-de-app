@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Screen from "@/components/layout/Screen";
 import NewExpenseForm from "./NewExpenseForm";
@@ -13,7 +14,12 @@ import NewExpenseForm from "./NewExpenseForm";
 export default function NewExpensePage() {
   return (
     <Screen>
-      <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">เพิ่มรายจ่าย</h1>
+      <div className="mb-5 flex items-baseline justify-between gap-3">
+        <h1 className="text-[26px] font-bold leading-tight text-text">เพิ่มรายจ่าย</h1>
+        <Link href="/expenses/import" className="shrink-0 text-[14px] font-semibold text-accent">
+          เพิ่มจากสลิป
+        </Link>
+      </div>
       <Suspense
         fallback={
           <Card className="rounded-[22px] p-[22px]">

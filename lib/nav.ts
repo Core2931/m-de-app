@@ -12,20 +12,26 @@ export const NAV_TABS: NavTab[] = [
   { href: "/people", label: "ค้างอยู่" },
 ];
 
+// Both ways of adding an expense light up the Add tab.
+const ADD_ROUTES = ["/expenses/new", "/expenses/import"];
+
 /**
  * Which tab owns a given pathname.
  *
- * Every tab except the List matches exactly; the List deliberately owns the
- * whole /expenses subtree (including the edit route /expenses/<id>) minus the
- * Add route, which has its own tab. The exact-match rules therefore have to be
+ * Every tab except the List and Add matches exactly. The List deliberately
+ * owns the whole /expenses subtree (including the edit route /expenses/<id>)
+ * minus the Add routes, which belong to the Add tab. Those rules have to be
  * decided before the prefix rule, or /expenses/new would light up two tabs.
  *
  * Callers pass `usePathname()`, which excludes the query string — so
  * /expenses/new?from=<id> still resolves to the Add tab.
  */
 export function isTabActive(href: string, pathname: string): boolean {
+  if (href === "/expenses/new") {
+    return ADD_ROUTES.includes(pathname);
+  }
   if (href === "/expenses") {
-    return pathname.startsWith("/expenses") && pathname !== "/expenses/new";
+    return pathname.startsWith("/expenses") && !ADD_ROUTES.includes(pathname);
   }
   return pathname === href;
 }

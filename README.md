@@ -19,8 +19,9 @@
 1. สร้าง Google Sheet ใหม่ (หรือใช้ของเดิม แต่แนะนำสร้างแยก เพื่อไม่ปนกับ sheet เดิม)
 2. สร้าง tab ชื่อ **`expenses`** (ตัวสะกดต้องตรงเป๊ะ) ใส่ header แถวแรก:
    ```
-   id | date | item | amount | remark | createdAt | category
+   id | date | item | amount | remark | createdAt | category | payee
    ```
+   column `payee` (H) เก็บชื่อร้านที่อ่านได้จากสลิป ใช้เติม รายการ + หมวด ให้สลิปร้านเดิมครั้งถัดไป แถวที่กรอกมือจะว่าง Sheet เดิมที่ยังไม่มี header ช่องนี้ใช้งานได้ตามปกติ — เพิ่ม `payee` ใน H1 เพื่อให้อ่านง่ายเท่านั้น
 3. สร้าง tab ชื่อ **`settlements`** (ตัวสะกดต้องตรงเป๊ะ) ใส่ header แถวแรก:
    ```
    id | date | person | amount | direction | note | createdAt
