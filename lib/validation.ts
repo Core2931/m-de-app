@@ -4,9 +4,11 @@ import { normalizePerson } from "@/lib/splits";
 import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { MONTH_RE } from "@/lib/budgets";
 
+const MAX_PAYEE_LENGTH = 100;
+
 export function validateExpenseInput(body: unknown): NewExpense | null {
   if (typeof body !== "object" || body === null) return null;
-  const { date, item, amount, remark, category } = body as Record<string, unknown>;
+  const { date, item, amount, remark, category, payee } = body as Record<string, unknown>;
 
   if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   if (typeof item !== "string" || item.trim() === "") return null;
@@ -16,6 +18,14 @@ export function validateExpenseInput(body: unknown): NewExpense | null {
   // here means a stale tab or a direct POST cannot get past it either.
   if (typeof remark === "string" && hasPlaceholderPerson(remark)) return null;
 
+  // Payee is OCR output, so it gets cleaned rather than rejected: a slip with
+  // a garbled shop name is still a real expense. The leading-character strip
+  // matters because rows are written USER_ENTERED — "=..." would be a formula.
+  const cleanPayee =
+    typeof payee === "string"
+      ? payee.replace(/^[=+\-@\s]+/, "").trim().slice(0, MAX_PAYEE_LENGTH)
+      : "";
+
   return {
     date,
     item: item.trim(),
@@ -23,6 +33,8 @@ export function validateExpenseInput(body: unknown): NewExpense | null {
     remark: typeof remark === "string" ? remark.trim() : "",
     // Unknown/legacy payloads fall back to the default category.
     category: toCategory(category),
+    // Key left off entirely when absent, so hand-typed rows stay payee-less.
+    ...(cleanPayee ? { payee: cleanPayee } : {}),
   };
 }
 

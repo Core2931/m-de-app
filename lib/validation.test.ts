@@ -90,6 +90,27 @@ describe("validateExpenseInput", () => {
   it("หมวดที่ไม่รู้จักตกกลับเป็นค่าเริ่มต้น", () => {
     expect(validateExpenseInput({ ...valid, category: "ห้วย" })?.category).toBe("food");
   });
+
+  it("รับ payee และ trim", () => {
+    expect(validateExpenseInput({ ...valid, payee: "  ทองใบshop  " })?.payee).toBe("ทองใบshop");
+  });
+
+  it("payee ว่างหรือไม่ใช่ string ไม่มี key payee ในผลลัพธ์", () => {
+    expect(validateExpenseInput({ ...valid, payee: "   " })).not.toHaveProperty("payee");
+    expect(validateExpenseInput({ ...valid, payee: 123 })).not.toHaveProperty("payee");
+    expect(validateExpenseInput(valid)).not.toHaveProperty("payee");
+  });
+
+  it("payee ยาวเกิน 100 ตัวอักษรถูกตัด", () => {
+    expect(validateExpenseInput({ ...valid, payee: "ก".repeat(150) })?.payee).toHaveLength(100);
+  });
+
+  it("payee ที่ขึ้นต้นด้วยเครื่องหมายสูตรถูกตัดหัวออก", () => {
+    // ชีตเขียนด้วย USER_ENTERED — ข้อความที่ขึ้นต้นด้วย = หรือ + จะกลายเป็นสูตร
+    expect(validateExpenseInput({ ...valid, payee: "=ทองใบshop" })?.payee).toBe("ทองใบshop");
+    expect(validateExpenseInput({ ...valid, payee: " +-@ ร้านกาแฟ" })?.payee).toBe("ร้านกาแฟ");
+    expect(validateExpenseInput({ ...valid, payee: "=+-@" })).not.toHaveProperty("payee");
+  });
 });
 
 // validateSettlementInput is the only thing standing between an untrusted
