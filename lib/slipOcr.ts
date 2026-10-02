@@ -1,5 +1,5 @@
-// TRIAL CODE (spike/slip-ocr-preview). Browser only: reads a slip image with
-// tesseract.js, entirely on the device — the image is never uploaded.
+// Browser only: reads a slip image with tesseract.js, entirely on the device —
+// the image is never uploaded.
 
 import type { Worker } from "tesseract.js";
 import { mergeSlipReads, parseSlipText, type SlipRead } from "@/lib/slipParse";

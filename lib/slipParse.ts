@@ -1,6 +1,6 @@
-// TRIAL CODE (spike/slip-ocr-preview): pulls the few fields we care about out
-// of raw OCR text from a Thai payment slip. Only K+ scan-to-pay and เป๋าตัง
-// layouts have been seen; everything else falls through to the generic rules.
+// Pulls the few fields we care about out of raw OCR text from a Thai payment
+// slip. Only K+ scan-to-pay and เป๋าตัง layouts have been seen; everything
+// else falls through to the generic rules.
 
 export interface SlipRead {
   amount: number | null;

@@ -142,6 +142,16 @@ describe("parseSlipText", () => {
     );
     expect(slip.payee).toBe("ชานานาชาติ ชามารวย");
   });
+
+  it("ยอดที่มี comma คั่นหลักพันอ่านเป็นตัวเลขเต็ม", () => {
+    const slip = parseSlipText("จำนวน:\n1,250.00 บาท\nค่าธรรมเนียม:\n0.00 บาท");
+    expect(slip.amount).toBe(1250);
+  });
+
+  it("มี.ค. คือมีนาคม ไม่ใช่มกราคม", () => {
+    expect(parseSlipText("5 มี.ค. 69 09:05 น.").date).toBe("2026-03-05");
+    expect(parseSlipText("5 ม.ค. 69 09:05 น.").date).toBe("2026-01-05");
+  });
 });
 
 describe("mergeSlipReads", () => {
