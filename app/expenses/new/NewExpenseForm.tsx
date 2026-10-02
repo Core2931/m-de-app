@@ -9,8 +9,10 @@ import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import SplitPreview from "@/components/ui/SplitPreview";
 import PersonChips, { type RemarkSelection } from "@/components/expenses/PersonChips";
+import QuickItems from "@/components/expenses/QuickItems";
 import { useExpenseStore } from "@/store/expenseStore";
 import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
+import { buildFrequentItems, type FrequentItem } from "@/lib/frequentItems";
 import { buildKnownPeople } from "@/lib/people";
 import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
@@ -40,8 +42,8 @@ export default function NewExpenseForm() {
   const amountRef = useRef<HTMLInputElement>(null);
   const remarkRef = useRef<HTMLInputElement>(null);
 
-  // This form needs the store for two things now: the "เพิ่มล่าสุด" list, and
-  // resolving ?from=<id> on a cold open.
+  // This form needs the store for three things now: the "เพิ่มล่าสุด" list,
+  // the "รายการประจำ" chips, and resolving ?from=<id> on a cold open.
   useEffect(() => {
     if (!isLoaded) load();
   }, [isLoaded, load]);
@@ -84,6 +86,12 @@ export default function NewExpenseForm() {
     [expenses, isLoaded]
   );
 
+  // Same isLoaded gate as above: an empty store has no habits to offer yet.
+  const frequentItems = useMemo(
+    () => (isLoaded ? buildFrequentItems(expenses, todayISO()) : []),
+    [expenses, isLoaded]
+  );
+
   /** The success banner must not outlive the entry it describes — left up
    *  while the next expense is being typed, it reads as confirmation of THAT
    *  one. Every field change clears it. */
@@ -101,6 +109,22 @@ export default function NewExpenseForm() {
     requestAnimationFrame(() => {
       remarkRef.current?.focus();
       remarkRef.current?.setSelectionRange(selection.start, selection.end);
+    });
+  }
+
+  function applyQuickItem(entry: FrequentItem) {
+    setSaved(null);
+    setItem(entry.item);
+    setCategory(entry.category);
+    setAmount(String(entry.amount));
+    // Remark is deliberately NOT filled: it carries the split, and yesterday's
+    // split landing silently on today's row puts money on the wrong person.
+    // The amount is the one thing that changes day to day, so leave it
+    // selected — typing replaces it, saving as-is keeps it. select() rather
+    // than setSelectionRange, which type="number" inputs do not support.
+    requestAnimationFrame(() => {
+      amountRef.current?.focus();
+      amountRef.current?.select();
     });
   }
 
@@ -166,6 +190,7 @@ export default function NewExpenseForm() {
           </p>
         )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <QuickItems items={frequentItems} onPick={applyQuickItem} />
           <DateField label="วันที่" value={date} onChange={edit(setDate)} required />
           <Input
             ref={amountRef}
