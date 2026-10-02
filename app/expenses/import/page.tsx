@@ -24,7 +24,12 @@ export default function ImportSlipsPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedCount, setSavedCount] = useState<number | null>(null);
+  // `busy` covers reading and saving alike and gates the file picker;
+  // `saving` is the save alone. They are separate because the two mean
+  // different things to the user: rows stay editable while slips are being
+  // read, and the button must never say "saving" before it was pressed.
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // The store drives both the shop suggestions and the "อาจซ้ำ" check, so
   // slips are not accepted until it has loaded.
@@ -84,9 +89,13 @@ export default function ImportSlipsPage() {
 
   async function handleSave() {
     setBusy(true);
+    setSaving(true);
     setError(null);
     setSavedCount(null);
 
+    // `rows` is the snapshot being saved; the list is locked (see the
+    // fieldset below) for as long as this runs, so it cannot drift from what
+    // is on screen.
     const outcome = await saveRows(rows, add);
     const left = rows.length - outcome.savedIds.length;
     // Saved rows leave the list whether or not the batch finished, so a
@@ -94,8 +103,16 @@ export default function ImportSlipsPage() {
     setRows((current) => current.filter((row) => !outcome.savedIds.includes(row.id)));
     if (outcome.savedIds.length > 0) setSavedCount(outcome.savedIds.length);
     if (outcome.error) {
-      setError(`${outcome.error} — เหลือ ${left} แถวยังไม่ได้บันทึก กดบันทึกอีกครั้งได้`);
+      // A request can fail on the way back: the row is in the sheet but we
+      // never heard. Reloading lets the "อาจซ้ำ" check see it, so a retry does
+      // not quietly file it twice.
+      await load();
+      setError(
+        `${outcome.error} — เหลือ ${left} แถวยังไม่ได้บันทึก ` +
+          `แถวที่ขึ้น "อาจซ้ำ" อาจถูกบันทึกไปแล้ว ตรวจก่อนกดบันทึกอีกครั้ง`
+      );
     }
+    setSaving(false);
     setBusy(false);
   }
 
@@ -130,15 +147,20 @@ export default function ImportSlipsPage() {
         )}
       </Card>
 
-      {rows.map((row) => (
-        <SlipRow
-          key={row.id}
-          row={row}
-          duplicate={duplicates.has(row.id)}
-          onChange={(patch) => updateRow(row.id, patch)}
-          onRemove={() => removeRow(row.id)}
-        />
-      ))}
+      {/* Locked while saving: an edit or a removal made mid-save would be
+          ignored, because the save works from the rows as they were when the
+          button was pressed. `contents` keeps the fieldset out of the layout. */}
+      <fieldset disabled={saving} className="contents">
+        {rows.map((row) => (
+          <SlipRow
+            key={row.id}
+            row={row}
+            duplicate={duplicates.has(row.id)}
+            onChange={(patch) => updateRow(row.id, patch)}
+            onRemove={() => removeRow(row.id)}
+          />
+        ))}
+      </fieldset>
 
       {rows.length > 0 && (
         <div className="mt-5 flex flex-col gap-2">
@@ -151,7 +173,7 @@ export default function ImportSlipsPage() {
             disabled={busy || notReady > 0}
             className="w-full"
           >
-            {busy ? "กำลังบันทึก..." : `บันทึกทั้งหมด (${rows.length})`}
+            {saving ? "กำลังบันทึก..." : `บันทึกทั้งหมด (${rows.length})`}
           </Button>
         </div>
       )}

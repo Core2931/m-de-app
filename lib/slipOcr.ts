@@ -2,6 +2,7 @@
 // the image is never uploaded.
 
 import type { Worker } from "tesseract.js";
+import { todayISO } from "@/lib/formatters";
 import { mergeSlipReads, parseSlipText, type SlipRead } from "@/lib/slipParse";
 
 // Values from the desktop trial: K+ slips carry a building watermark that
@@ -74,8 +75,12 @@ export async function readSlip(file: File): Promise<SlipResult> {
   await worker.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
   const raw = await worker.recognize(file);
 
+  const today = todayISO();
   return {
-    read: mergeSlipReads(parseSlipText(blackWhite.data.text), parseSlipText(raw.data.text)),
+    read: mergeSlipReads(
+      parseSlipText(blackWhite.data.text, today),
+      parseSlipText(raw.data.text, today)
+    ),
     ms: Math.round(performance.now() - start),
     blackWhiteText: blackWhite.data.text,
     rawText: raw.data.text,

@@ -13,7 +13,14 @@ import type { Expense, NewExpense } from "@/types";
 const TODAY = "2026-10-02";
 
 function read(overrides: Partial<SlipRead> = {}): SlipRead {
-  return { amount: 60, date: "2026-10-01", time: "12:57", payee: "ทองใบshop", ...overrides };
+  return {
+    amount: 60,
+    amountLabeled: false,
+    date: "2026-10-01",
+    time: "12:57",
+    payee: "ทองใบshop",
+    ...overrides,
+  };
 }
 
 function expense(overrides: Partial<Expense> = {}): Expense {
@@ -211,6 +218,14 @@ describe("saveRows", () => {
     );
     expect(attempted).toEqual(["หนึ่ง", "สอง"]);
     expect(outcome).toEqual({ savedIds: ["r1"], error: "บันทึกไม่สำเร็จ" });
+  });
+
+  it("ข้อความ error ของเบราว์เซอร์ไม่หลุดไปถึงผู้ใช้", async () => {
+    // เน็ตหลุดกลางคัน fetch โยน TypeError("Failed to fetch") — ข้อความที่แสดงต้องเป็นไทย
+    const outcome = await saveRows([row()], async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    expect(outcome).toEqual({ savedIds: [], error: "บันทึกไม่สำเร็จ" });
   });
 
   it("ไม่มีแถว ไม่เรียกบันทึกเลย", async () => {

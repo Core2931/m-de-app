@@ -122,8 +122,10 @@ export async function saveRows(
     try {
       await add(rowToNewExpense(row));
       savedIds.push(row.id);
-    } catch (err) {
-      return { savedIds, error: err instanceof Error ? err.message : "บันทึกไม่สำเร็จ" };
+    } catch {
+      // One fixed message: a dropped connection surfaces as the browser's own
+      // "Failed to fetch", which is not something to show in a Thai UI.
+      return { savedIds, error: "บันทึกไม่สำเร็จ" };
     }
   }
   return { savedIds, error: null };
