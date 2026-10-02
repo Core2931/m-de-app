@@ -8,6 +8,8 @@ export interface Expense {
   remark: string;
   category: Category;
   createdAt: string; // ISO timestamp
+  /** Shop name read from a slip. Absent on hand-typed and legacy rows. */
+  payee?: string;
 }
 
 export type NewExpense = Omit<Expense, "id" | "createdAt">;
