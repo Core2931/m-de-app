@@ -18,6 +18,8 @@
   --color-expense: var(--expense);
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
   --color-nav: var(--nav-bg);
   --color-food: var(--food);
   --color-transport: var(--transport);
@@ -42,6 +44,10 @@
   --expense: #ea580c;
   --accent-text: #ffffff;
   --accent-soft: rgba(5, 150, 105, 0.12);
+  /* The Tally mark's Ember, same shade as app/icon.svg. Used for the theme
+     toggle only — a control, not text, so 3:1 on a light surface is enough. */
+  --ember: #f26419;
+  --ember-soft: rgba(242, 100, 25, 0.16);
   --shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
   --nav-bg: #ffffff;
   --food: oklch(0.88 0.08 40);
@@ -65,6 +71,7 @@
   --expense: #f97316;
   --accent-text: #0f172a;
   --accent-soft: rgba(16, 185, 129, 0.18);
+  --ember-soft: rgba(242, 100, 25, 0.24);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   --nav-bg: #1e293b;
   --food: #334155;
