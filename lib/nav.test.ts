@@ -8,7 +8,14 @@ function activeLabels(pathname: string): string[] {
   return NAV_TABS.filter((tab) => isTabActive(tab.href, pathname)).map((t) => t.label);
 }
 
-const APP_ROUTES = ["/", "/expenses", "/expenses/new", "/expenses/abc-123", "/people"];
+const APP_ROUTES = [
+  "/",
+  "/expenses",
+  "/expenses/new",
+  "/expenses/import",
+  "/expenses/abc-123",
+  "/people",
+];
 
 describe("isTabActive", () => {
   it("ทุกหน้าในแอปแอคทีฟได้แท็บเดียว", () => {
@@ -33,6 +40,12 @@ describe("isTabActive", () => {
     // The exact rules must be decided before the /expenses prefix rule —
     // otherwise this route lights up both tabs.
     expect(activeLabels("/expenses/new")).toEqual(["เพิ่ม"]);
+  });
+
+  it("หน้าเพิ่มจากสลิปเป็นของแท็บเพิ่ม ไม่ใช่ของรายการ", () => {
+    // It is another way to add, reached from the Add screen — lighting up the
+    // List tab would say the user had left the flow they are in.
+    expect(activeLabels("/expenses/import")).toEqual(["เพิ่ม"]);
   });
 
   it("ค้างอยู่", () => {
