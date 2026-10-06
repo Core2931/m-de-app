@@ -11,16 +11,16 @@ import BudgetCard from "@/components/home/BudgetCard";
 import {
   useExpenseStore,
   selectTotalForDate,
-  selectTotalForMonth,
   selectMyShareForDate,
-  selectMyShareForMonth,
   selectWeek,
 } from "@/store/expenseStore";
 import { useSettlementStore } from "@/store/settlementStore";
 import { useBudgetStore } from "@/store/budgetStore";
 import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
-import { computeBudgetProgress, findBudgetForMonth } from "@/lib/budgets";
-import { formatCurrency, todayISO, currentMonthISO } from "@/lib/formatters";
+import { computeBudgetProgress, dailyAllowance, findBudgetForMonth } from "@/lib/budgets";
+import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
+import { cycleFor, daysLeftInCycle, missingHolidayYear } from "@/lib/payCycle";
+import { myShareForRange, totalForRange } from "@/lib/rangeTotals";
 
 const TODAY_CAP = 4;
 
@@ -53,12 +53,16 @@ export default function DashboardPage() {
   }, [budgetsLoaded, loadBudgets]);
 
   const today = todayISO();
-  const month = currentMonthISO();
+  // Everything "this month" used to mean now follows the salary cycle: the
+  // money that landed on the last payday is what is being spent.
+  const cycle = cycleFor(today);
+  const daysLeft = daysLeftInCycle(cycle, today);
+  const missingYear = missingHolidayYear(cycle);
   const todayTotal = selectTotalForDate(expenses, today);
-  const monthTotal = selectTotalForMonth(expenses, month);
+  const cycleTotal = totalForRange(expenses, cycle.start, cycle.end);
   const week = selectWeek(expenses);
   const todayMyShare = selectMyShareForDate(expenses, today);
-  const monthMyShare = selectMyShareForMonth(expenses, month);
+  const cycleMyShare = myShareForRange(expenses, cycle.start, cycle.end);
   const totals = summarizeBalances(buildPersonBalances(expenses, settlements));
   const hasOutstanding =
     isLoaded && settlementsLoaded && (totals.reserved > 0 || totals.receivable > 0);
@@ -68,10 +72,13 @@ export default function DashboardPage() {
   // budget when it actually cost ฿1,000. myShare deliberately does NOT
   // subtract borrowed — someone else paying for you still counts, because you
   // consumed it. Same definition as every other myShare in the app.
-  const budgetProgress = computeBudgetProgress(monthMyShare, findBudgetForMonth(budgets, month));
+  const budgetProgress = computeBudgetProgress(
+    cycleMyShare,
+    findBudgetForMonth(budgets, cycle.budgetMonth)
+  );
 
   // Gated on both stores. A bar rendered before the data lands shows 0% spent,
-  // which reads as "nothing spent this month" — the same lie three earlier
+  // which reads as "nothing spent this cycle" — the same lie three earlier
   // fixes in this app were about.
   const showBudget = isLoaded && budgetsLoaded;
 
@@ -100,19 +107,37 @@ export default function DashboardPage() {
           )}
         </Card>
         <Card className="rounded-[20px] p-[18px_20px]">
-          <p className="mb-2 text-[13px] font-medium text-sub">เดือนนี้</p>
-          <p className="text-[26px] font-bold text-expense">{formatCurrency(monthTotal)}</p>
-          {monthMyShare !== monthTotal && (
-            <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(monthMyShare)}</p>
+          <p className="mb-2 text-[13px] font-medium text-sub">รอบนี้</p>
+          <p className="text-[26px] font-bold text-expense">{formatCurrency(cycleTotal)}</p>
+          {/* Gated on isLoaded: this page is prerendered at build time, and
+              text derived from "today" would be the build day's until the
+              client takes over. The store only ever loads in the browser. */}
+          {isLoaded && (
+            <>
+              <p className="mt-1 text-[12px] text-sub">
+                {formatDateShort(cycle.start)} – {formatDateShort(cycle.end)}
+              </p>
+              <p className="text-[12px] text-sub">อีก {daysLeft} วันเงินออก</p>
+            </>
+          )}
+          {cycleMyShare !== cycleTotal && (
+            <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(cycleMyShare)}</p>
           )}
         </Card>
       </div>
 
+      {isLoaded && missingYear !== null && (
+        <p className="mb-4 text-[12px] text-expense">
+          ยังไม่มีรายการวันหยุดปี {missingYear + 543} — วันเงินออกอาจคลาดเคลื่อน
+        </p>
+      )}
+
       {showBudget && (
         <BudgetCard
           progress={budgetProgress}
-          monthTotal={monthTotal}
-          onSave={(amount) => saveBudget(month, amount)}
+          cycleTotal={cycleTotal}
+          dailyAllowance={dailyAllowance(budgetProgress, daysLeft)}
+          onSave={(amount) => saveBudget(cycle.budgetMonth, amount)}
         />
       )}
 

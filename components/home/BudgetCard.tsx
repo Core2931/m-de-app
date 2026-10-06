@@ -9,13 +9,20 @@ import type { BudgetProgress } from "@/lib/budgets";
 
 interface BudgetCardProps {
   progress: BudgetProgress | null;
-  /** The raw month total, shown only when it differs from myShare. */
-  monthTotal: number;
-  /** The month is the caller's business — it closes over it here. */
+  /** The raw cycle total, shown only when it differs from myShare. */
+  cycleTotal: number;
+  /** Whole baht per remaining day, or null when there is nothing to say. */
+  dailyAllowance: number | null;
+  /** The cycle's budget month is the caller's business — it closes over it here. */
   onSave: (amount: number | null) => Promise<void>;
 }
 
-export default function BudgetCard({ progress, monthTotal, onSave }: BudgetCardProps) {
+export default function BudgetCard({
+  progress,
+  cycleTotal,
+  dailyAllowance,
+  onSave,
+}: BudgetCardProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -53,7 +60,7 @@ export default function BudgetCard({ progress, monthTotal, onSave }: BudgetCardP
       <Card className="mb-4 rounded-[22px] p-[18px_20px]">
         <form onSubmit={handleSave} className="flex flex-col gap-3">
           <Input
-            label="งบเดือนนี้"
+            label="งบรอบนี้"
             type="number"
             inputMode="decimal"
             step="0.01"
@@ -91,7 +98,7 @@ export default function BudgetCard({ progress, monthTotal, onSave }: BudgetCardP
           onClick={startEditing}
           className="w-full text-left text-[14px] font-medium text-sub transition-transform active:scale-[0.98]"
         >
-          ตั้งงบเดือนนี้ →
+          ตั้งงบรอบนี้ →
         </button>
       </Card>
     );
@@ -103,7 +110,7 @@ export default function BudgetCard({ progress, monthTotal, onSave }: BudgetCardP
     <Card className="mb-4 rounded-[22px] p-[18px_20px]">
       <button type="button" onClick={startEditing} className="w-full text-left">
         <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-[13px] font-medium text-sub">งบเดือนนี้</span>
+          <span className="text-[13px] font-medium text-sub">งบรอบนี้</span>
           <span className="text-[13px] text-sub tabular-nums">
             {Math.round(progress.pct)}% ของ {formatCurrency(progress.budget)}
           </span>
@@ -135,12 +142,18 @@ export default function BudgetCard({ progress, monthTotal, onSave }: BudgetCardP
           </span>
         </div>
 
+        {dailyAllowance !== null && (
+          <p className="mt-1 text-[12px] text-sub">
+            ใช้ได้วันละ {formatCurrency(dailyAllowance)}
+          </p>
+        )}
+
         {/* myShare is what the budget measures — money fronted for other people
             is coming back. Cash actually out the door still matters, so it
-            shows when the two differ, same as the today/month cards. */}
-        {Math.round(monthTotal * 100) !== Math.round(progress.spent * 100) && (
+            shows when the two differ, same as the today/cycle cards. */}
+        {Math.round(cycleTotal * 100) !== Math.round(progress.spent * 100) && (
           <p className="mt-1 text-[12px] text-sub">
-            จ่ายจริงเดือนนี้ {formatCurrency(monthTotal)}
+            จ่ายจริงรอบนี้ {formatCurrency(cycleTotal)}
           </p>
         )}
       </button>

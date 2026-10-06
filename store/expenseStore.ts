@@ -84,10 +84,6 @@ export function selectTotalForDate(expenses: Expense[], dateISO: string): number
   return expenses.filter((e) => e.date === dateISO).reduce((sum, e) => sum + e.amount, 0);
 }
 
-export function selectTotalForMonth(expenses: Expense[], monthISO: string): number {
-  return expenses.filter((e) => e.date.startsWith(monthISO)).reduce((sum, e) => sum + e.amount, 0);
-}
-
 export interface WeekDay {
   label: string;
   total: number;
@@ -107,11 +103,5 @@ export function selectWeek(expenses: Expense[]): WeekDay[] {
 export function selectMyShareForDate(expenses: Expense[], dateISO: string): number {
   return expenses
     .filter((e) => e.date === dateISO)
-    .reduce((sum, e) => sum + summarizeExpense(e).myShare, 0);
-}
-
-export function selectMyShareForMonth(expenses: Expense[], monthISO: string): number {
-  return expenses
-    .filter((e) => e.date.startsWith(monthISO))
     .reduce((sum, e) => sum + summarizeExpense(e).myShare, 0);
 }
