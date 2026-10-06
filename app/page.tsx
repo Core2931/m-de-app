@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
@@ -52,7 +52,24 @@ export default function DashboardPage() {
     if (!budgetsLoaded) loadBudgets();
   }, [budgetsLoaded, loadBudgets]);
 
-  const today = todayISO();
+  // "Today" is state, not a value read during render: this page stays open in
+  // a tab or as an installed app for days, and nothing else re-renders it when
+  // the date rolls over. Left stale across a payday it would keep showing the
+  // old cycle and save a budget to the old cycle's row.
+  const [today, setToday] = useState(todayISO);
+
+  useEffect(() => {
+    const refresh = () => setToday(todayISO());
+    // Coming back to the app is when a stale day gets seen; the timer covers
+    // a screen that is simply left on.
+    document.addEventListener("visibilitychange", refresh);
+    const id = setInterval(refresh, 60_000);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      clearInterval(id);
+    };
+  }, []);
+
   // Everything "this month" used to mean now follows the salary cycle: the
   // money that landed on the last payday is what is being spent.
   const cycle = cycleFor(today);
