@@ -8,9 +8,11 @@ import Avatar from "@/components/ui/Avatar";
 import DateField from "@/components/ui/DateField";
 import Screen from "@/components/layout/Screen";
 import CategoryFilter from "@/components/expenses/CategoryFilter";
+import CycleButtons from "@/components/expenses/CycleButtons";
 import PeriodSummary from "@/components/expenses/PeriodSummary";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
-import { formatCurrency, formatDate, monthStartISO } from "@/lib/formatters";
+import { formatCurrency, formatDate, todayISO } from "@/lib/formatters";
+import { cycleFor } from "@/lib/payCycle";
 import { summarizeExpense } from "@/lib/splits";
 import { summarizePeriod } from "@/lib/periodSplits";
 import { buildScopeLabel } from "@/lib/scopeLabel";
@@ -28,16 +30,16 @@ export default function ExpensesPage() {
   // full speed while the list catches up.
   const deferredQuery = useDeferredValue(query);
 
-  // Opens on the current month instead of the whole sheet. Seeded from an
-  // effect rather than useState's initializer because this route is statically
-  // prerendered: reading "now" during render would bake the build-time month
-  // into the HTML and mismatch the visitor's month on hydration. Running
-  // client-only costs nothing visually — the store is still empty on first
-  // paint, so the list never flashes unfiltered. Empty deps on purpose: this
-  // seeds once, and clearing the field afterwards must stay cleared.
+  // Opens on the current salary cycle instead of the whole sheet. Seeded from
+  // an effect rather than useState's initializer because this route is
+  // statically prerendered: reading "now" during render would bake the
+  // build-time cycle into the HTML and mismatch the visitor's on hydration.
+  // Running client-only costs nothing visually — the store is still empty on
+  // first paint, so the list never flashes unfiltered. Empty deps on purpose:
+  // this seeds once, and clearing the field afterwards must stay cleared.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFrom(monthStartISO());
+    setFrom(cycleFor(todayISO()).start);
   }, []);
 
   // Always loads every expense, never just the visible range: /people derives
@@ -74,9 +76,19 @@ export default function ExpensesPage() {
     <Screen>
       <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการรายจ่าย</h1>
 
-      <div className="mb-3 grid grid-cols-2 gap-3">
+      <div className="mb-2 grid grid-cols-2 gap-3">
         <DateField label="จากวันที่" value={from} onChange={setFrom} filled align="left" />
         <DateField label="ถึงวันที่" value={to} onChange={setTo} filled align="right" />
+      </div>
+
+      <div className="mb-3">
+        <CycleButtons
+          from={from}
+          onPick={(nextFrom, nextTo) => {
+            setFrom(nextFrom);
+            setTo(nextTo);
+          }}
+        />
       </div>
 
       <div className="mb-3">
