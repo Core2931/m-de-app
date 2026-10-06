@@ -58,3 +58,17 @@ export function computeBudgetProgress(
     over: safeSpent - budget > EPSILON,
   };
 }
+
+/**
+ * How much can be spent per day for the rest of the cycle without going over:
+ * what is left of the budget spread across the days still to get through.
+ *
+ * Whole baht, rounded down — a figure to steer by, and rounding up would
+ * promise money that is not there. Null when there is nothing useful to say:
+ * no budget, nothing left, or already over (the card says "เกิน" for that).
+ */
+export function dailyAllowance(progress: BudgetProgress | null, daysLeft: number): number | null {
+  if (!progress || progress.over || progress.remaining <= 0) return null;
+  if (!Number.isFinite(daysLeft) || daysLeft < 1) return null;
+  return Math.floor(progress.remaining / daysLeft);
+}
