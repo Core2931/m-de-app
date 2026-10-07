@@ -38,10 +38,10 @@
   --text: #0f172a;
   --sub: rgba(15, 23, 42, 0.55);
   --border: rgba(15, 23, 42, 0.1);
-  --accent: #059669;
+  --accent: #5b7db1;
   --expense: #ea580c;
   --accent-text: #ffffff;
-  --accent-soft: rgba(5, 150, 105, 0.12);
+  --accent-soft: rgba(91, 125, 177, 0.14);
   /* Tints of --accent for gradients and glows. Derived rather than picked, so
      they follow the accent in both themes — :root.dark only swaps --accent. */
   --accent-hi: color-mix(in oklab, var(--accent) 76%, white);
@@ -73,10 +73,10 @@
   --text: #f1f5f9;
   --sub: rgba(241, 245, 249, 0.55);
   --border: rgba(255, 255, 255, 0.12);
-  --accent: #10b981;
+  --accent: #8aa6d6;
   --expense: #f97316;
   --accent-text: #0f172a;
-  --accent-soft: rgba(16, 185, 129, 0.18);
+  --accent-soft: rgba(138, 166, 214, 0.18);
   --ember-soft: rgba(242, 100, 25, 0.24);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   --nav-bg: #363636;
