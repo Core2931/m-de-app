@@ -4,6 +4,7 @@ import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import AnimatedAmount from "@/components/ui/AnimatedAmount";
 import { formatCurrency } from "@/lib/formatters";
 import type { BudgetProgress } from "@/lib/budgets";
 
@@ -104,7 +105,9 @@ export default function BudgetCard({
     );
   }
 
-  const barColor = progress.over ? "var(--expense)" : "var(--accent)";
+  const barFill = progress.over
+    ? "var(--expense)"
+    : "linear-gradient(90deg, var(--accent-lo), var(--accent-hi))";
 
   return (
     <Card className="mb-4 rounded-[22px] p-[18px_20px]">
@@ -120,14 +123,14 @@ export default function BudgetCard({
             runtime w-[…] class. Clamped here while pct above stays honest. */}
         <div className="h-2.5 w-full overflow-hidden rounded-full bg-border">
           <div
-            className="h-full rounded-full"
-            style={{ width: `${Math.min(100, progress.pct)}%`, background: barColor }}
+            className="grow-right h-full rounded-full"
+            style={{ width: `${Math.min(100, progress.pct)}%`, background: barFill }}
           />
         </div>
 
         <div className="mt-2 flex items-baseline justify-between">
           <span className="text-[20px] font-bold tabular-nums text-text">
-            {formatCurrency(progress.spent)}
+            <AnimatedAmount value={progress.spent} />
           </span>
           <span
             className={

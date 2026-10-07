@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
+import AnimatedAmount from "@/components/ui/AnimatedAmount";
 import Screen from "@/components/layout/Screen";
 import WeekChart from "@/components/home/WeekChart";
 import BudgetCard from "@/components/home/BudgetCard";
@@ -118,14 +119,18 @@ export default function DashboardPage() {
       <div className="mb-4 grid grid-cols-2 gap-3">
         <Card className="rounded-[20px] p-[18px_20px]">
           <p className="mb-2 text-[13px] font-medium text-sub">วันนี้</p>
-          <p className="text-[26px] font-bold text-expense">{formatCurrency(todayTotal)}</p>
+          <p className="text-[26px] font-bold text-expense">
+            <AnimatedAmount value={todayTotal} />
+          </p>
           {todayMyShare !== todayTotal && (
             <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(todayMyShare)}</p>
           )}
         </Card>
         <Card className="rounded-[20px] p-[18px_20px]">
           <p className="mb-2 text-[13px] font-medium text-sub">รอบนี้</p>
-          <p className="text-[26px] font-bold text-expense">{formatCurrency(cycleTotal)}</p>
+          <p className="text-[26px] font-bold text-expense">
+            <AnimatedAmount value={cycleTotal} />
+          </p>
           {/* Gated on isLoaded: this page is prerendered at build time, and
               text derived from "today" would be the build day's until the
               client takes over. The store only ever loads in the browser. */}
@@ -185,7 +190,9 @@ export default function DashboardPage() {
 
       <Card className="mb-4 rounded-[22px] p-[20px_22px]">
         <p className="mb-[14px] text-[13px] font-medium text-sub">สัปดาห์นี้</p>
-        <WeekChart days={week} />
+        {/* Remounted once the expenses arrive, so the bars rise at their real
+            heights instead of having already animated as empty stubs. */}
+        <WeekChart key={isLoaded ? "loaded" : "pending"} days={week} />
       </Card>
 
       <Card className="rounded-[22px] p-[20px_22px]">

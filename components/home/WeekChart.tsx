@@ -33,12 +33,19 @@ export default function WeekChart({ days }: WeekChartProps) {
               )}
             </div>
             <div className="flex w-full items-end" style={{ height: CHART_H }}>
+              {/* Today is the one solid, lit bar; the other days fade toward
+                  the baseline so the eye lands on today first. Each bar rises
+                  a beat after the one before it. */}
               <div
-                className="w-full rounded-[6px]"
+                className="grow-up w-full rounded-[6px]"
                 style={{
                   height: h,
-                  background: day.isToday ? "var(--accent)" : "var(--accent2)",
+                  background: day.isToday
+                    ? "linear-gradient(180deg, var(--accent-hi), var(--accent))"
+                    : "linear-gradient(180deg, var(--accent-dim), var(--accent-faint))",
+                  boxShadow: day.isToday ? "0 4px 14px -2px var(--accent-glow)" : undefined,
                   opacity: day.total > 0 ? 1 : 0.35,
+                  animationDelay: `${i * 40}ms`,
                 }}
               />
             </div>

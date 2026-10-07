@@ -14,7 +14,6 @@
   --color-sub: var(--sub);
   --color-border: var(--border);
   --color-accent: var(--accent);
-  --color-accent2: var(--accent2);
   --color-expense: var(--expense);
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
@@ -40,10 +39,18 @@
   --sub: rgba(15, 23, 42, 0.55);
   --border: rgba(15, 23, 42, 0.1);
   --accent: #059669;
-  --accent2: #0891b2;
   --expense: #ea580c;
   --accent-text: #ffffff;
   --accent-soft: rgba(5, 150, 105, 0.12);
+  /* Tints of --accent for gradients and glows. Derived rather than picked, so
+     they follow the accent in both themes — :root.dark only swaps --accent. */
+  --accent-hi: color-mix(in oklab, var(--accent) 76%, white);
+  --accent-lo: color-mix(in oklab, var(--accent) 80%, black);
+  --accent-glow: color-mix(in srgb, var(--accent) 55%, transparent);
+  --accent-dim: color-mix(in srgb, var(--accent) 48%, transparent);
+  --accent-faint: color-mix(in srgb, var(--accent) 18%, transparent);
+  /* Thin highlight along the top edge of a raised control. */
+  --sheen: rgba(255, 255, 255, 0.3);
   /* The Tally mark's Ember, same shade as app/icon.svg. Used for the theme
      toggle only — a control, not text, so 3:1 on a light surface is enough. */
   --ember: #f26419;
@@ -67,7 +74,6 @@
   --sub: rgba(241, 245, 249, 0.55);
   --border: rgba(255, 255, 255, 0.12);
   --accent: #10b981;
-  --accent2: #22d3ee;
   --expense: #f97316;
   --accent-text: #0f172a;
   --accent-soft: rgba(16, 185, 129, 0.18);
@@ -103,4 +109,32 @@ body {
 }
 .no-scrollbar {
   scrollbar-width: none;
+}
+
+/* Chart bars rise from the baseline and the budget fill sweeps in from the
+   left when they mount. Decoration only, so it is dropped entirely for anyone
+   who has asked the system for less motion. */
+@keyframes grow-up {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes grow-right {
+  from {
+    transform: scaleX(0);
+  }
+}
+.grow-up {
+  transform-origin: bottom;
+  animation: grow-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.grow-right {
+  transform-origin: left;
+  animation: grow-right 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .grow-up,
+  .grow-right {
+    animation: none;
+  }
 }
