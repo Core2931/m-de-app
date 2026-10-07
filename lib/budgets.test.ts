@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { computeBudgetProgress, findBudgetForMonth, parseBudgetAmount } from "@/lib/budgets";
+import {
+  computeBudgetProgress,
+  dailyAllowance,
+  findBudgetForMonth,
+  parseBudgetAmount,
+} from "@/lib/budgets";
 import type { Budget } from "@/types";
 
 function budget(month: string, amount: number, createdAt = "2026-08-01T00:00:00.000Z"): Budget {
@@ -105,5 +110,37 @@ describe("computeBudgetProgress", () => {
   it("งบ 0 หรือติดลบไม่ใช่งบ", () => {
     expect(computeBudgetProgress(100, 0)).toBeNull();
     expect(computeBudgetProgress(100, -5)).toBeNull();
+  });
+});
+
+describe("dailyAllowance", () => {
+  it("งบที่เหลือหารด้วยวันที่เหลือ ปัดลงเป็นบาทเต็ม", () => {
+    // เหลือ 8,000 อีก 23 วัน → 347.82… → 347
+    expect(dailyAllowance(computeBudgetProgress(2000, 10000), 23)).toBe(347);
+  });
+
+  it("วันสุดท้ายของรอบ ใช้ได้เท่าที่เหลือทั้งหมด", () => {
+    expect(dailyAllowance(computeBudgetProgress(9500, 10000), 1)).toBe(500);
+  });
+
+  it("เหลือน้อยกว่าจำนวนวัน ได้ 0 ไม่ใช่เศษ", () => {
+    expect(dailyAllowance(computeBudgetProgress(9990, 10000), 23)).toBe(0);
+  });
+
+  it("ไม่มีงบ คืน null", () => {
+    expect(dailyAllowance(null, 23)).toBeNull();
+    expect(dailyAllowance(computeBudgetProgress(2000, null), 23)).toBeNull();
+  });
+
+  it("เกินงบหรือใช้พอดีงบ คืน null", () => {
+    expect(dailyAllowance(computeBudgetProgress(12000, 10000), 23)).toBeNull();
+    expect(dailyAllowance(computeBudgetProgress(10000, 10000), 23)).toBeNull();
+  });
+
+  it("จำนวนวันที่ใช้ไม่ได้ คืน null ไม่หารด้วยศูนย์", () => {
+    const progress = computeBudgetProgress(2000, 10000);
+    expect(dailyAllowance(progress, 0)).toBeNull();
+    expect(dailyAllowance(progress, -3)).toBeNull();
+    expect(dailyAllowance(progress, NaN)).toBeNull();
   });
 });
