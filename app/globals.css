@@ -61,8 +61,8 @@
 
 /* Dark theme */
 :root.dark {
-  --bg: #0f172a;
-  --card: #1e293b;
+  --bg: #2b2b2b;
+  --card: #363636;
   --text: #f1f5f9;
   --sub: rgba(241, 245, 249, 0.55);
   --border: rgba(255, 255, 255, 0.12);
@@ -73,10 +73,12 @@
   --accent-soft: rgba(16, 185, 129, 0.18);
   --ember-soft: rgba(242, 100, 25, 0.24);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --nav-bg: #1e293b;
-  --food: #334155;
-  --transport: #1e3a4a;
-  --life: #3b2e4a;
+  --nav-bg: #363636;
+  /* Same hues as the light avatars, at one lightness that stays visible on
+     the charcoal card. */
+  --food: oklch(0.42 0.06 40);
+  --transport: oklch(0.42 0.06 230);
+  --life: oklch(0.42 0.06 300);
   --goods: oklch(0.42 0.05 95);
   --other: oklch(0.42 0.05 150);
 }
