@@ -232,7 +232,7 @@ export default function NewExpenseForm() {
             />
             <SplitPreview remark={remark} knownPeople={knownPeople} />
           </div>
-          {error && <p className="text-sm text-accent">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           {saved && (
             <p className="text-sm text-accent">
               ✓ บันทึกแล้ว · {saved.item} {formatCurrency(saved.amount)}

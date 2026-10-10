@@ -163,7 +163,7 @@ export default function DashboardPage() {
           <Card className="rounded-[22px] p-[18px_22px]">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[13px] font-medium text-sub">ค้างอยู่</p>
-              <span className="text-[13px] font-semibold text-accent">ดูทั้งหมด →</span>
+              <span className="text-[13px] font-semibold text-link">ดูทั้งหมด →</span>
             </div>
             <div className="flex gap-6">
               <div>
@@ -192,7 +192,7 @@ export default function DashboardPage() {
         <p className="mb-3 text-[13px] font-medium text-sub">รายการวันนี้</p>
 
         {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}
-        {error && <p className="text-sm text-accent">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         {!isLoading && !error && todayItems.length === 0 && (
           <p className="text-sm text-sub">ยังไม่มีรายการวันนี้</p>
         )}
@@ -212,7 +212,7 @@ export default function DashboardPage() {
         {moreCount > 0 && (
           <Link
             href="/expenses"
-            className="block pt-3 pb-0.5 text-center text-sm font-semibold text-accent"
+            className="block pt-3 pb-0.5 text-center text-sm font-semibold text-link"
           >
             ดูทั้งหมด ({moreCount} รายการเพิ่มเติม)
           </Link>

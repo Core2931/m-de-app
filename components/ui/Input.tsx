@@ -24,7 +24,7 @@ export default function Input({ label, className, id, filled, ...props }: InputP
         id={inputId}
         className={cn(
           "w-full rounded-xl border border-border px-3 py-[11px] text-[15px] text-text outline-none",
-          "placeholder:text-sub focus:border-accent transition-colors",
+          "placeholder:text-sub focus-edge transition-colors",
           filled ? "bg-card" : "bg-transparent",
           className
         )}

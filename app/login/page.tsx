@@ -53,7 +53,7 @@ export default function LoginPage() {
               autoFocus
               required
             />
-            {error && <p className="text-sm text-accent">{error}</p>}
+            {error && <p className="text-sm text-danger">{error}</p>}
             <Button type="submit" disabled={loading} className="mt-1.5 w-full">
               {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
             </Button>

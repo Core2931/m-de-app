@@ -26,7 +26,7 @@ export default function BottomNav() {
                 <span
                   className={cn(
                     "whitespace-nowrap text-sm font-semibold",
-                    isActive ? "text-accent" : "text-sub"
+                    isActive ? "text-link" : "text-sub"
                   )}
                 >
                   {label}

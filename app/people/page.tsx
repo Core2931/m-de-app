@@ -91,8 +91,8 @@ export default function PeoplePage() {
       )}
 
       {!bothLoaded && !hasLoadError && <p className="text-sm text-sub">กำลังโหลด...</p>}
-      {settlementsError && <p className="text-sm text-expense">{settlementsError}</p>}
-      {expensesError && <p className="text-sm text-expense">{expensesError}</p>}
+      {settlementsError && <p className="text-sm text-danger">{settlementsError}</p>}
+      {expensesError && <p className="text-sm text-danger">{expensesError}</p>}
 
       {bothLoaded &&
         (balances.length === 0 ? (
@@ -108,7 +108,7 @@ export default function PeoplePage() {
       {recentSettlements.length > 0 && (
         <Card className="rounded-[22px] p-[20px_22px]">
           <p className="mb-3 text-[13px] font-medium text-sub">เคลียร์ล่าสุด</p>
-          {removeError && <p className="mb-2 text-[13px] text-expense">{removeError}</p>}
+          {removeError && <p className="mb-2 text-[13px] text-danger">{removeError}</p>}
           {recentSettlements.map((settlement) => (
             <div key={settlement.id} className="flex items-center gap-2 py-1.5 text-[13px]">
               <span className="text-sub">{formatDateShort(settlement.date)}</span>

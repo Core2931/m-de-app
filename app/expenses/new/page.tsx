@@ -16,7 +16,7 @@ export default function NewExpensePage() {
     <Screen>
       <div className="mb-5 flex items-baseline justify-between gap-3">
         <h1 className="text-[26px] font-bold leading-tight text-text">เพิ่มรายจ่าย</h1>
-        <Link href="/expenses/import" className="shrink-0 text-[14px] font-semibold text-accent">
+        <Link href="/expenses/import" className="shrink-0 text-[14px] font-semibold text-link">
           เพิ่มจากสลิป
         </Link>
       </div>

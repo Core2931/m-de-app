@@ -79,7 +79,7 @@ export default function SettleDialog({ target, onClose }: SettleDialogProps) {
             onChange={(e) => setNote(e.target.value)}
             placeholder="(ถ้ามี)"
           />
-          {error && <p className="text-sm text-expense">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <div className="mt-1.5 flex gap-3">
             <Button type="submit" disabled={saving} className="flex-1">
               {saving ? "กำลังบันทึก..." : "เคลียร์"}

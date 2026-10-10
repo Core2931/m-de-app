@@ -70,7 +70,7 @@ export default function BudgetCard({
             onChange={(e) => setDraft(e.target.value)}
             autoFocus
           />
-          {error && <p className="text-[13px] text-expense">{error}</p>}
+          {error && <p className="text-[13px] text-danger">{error}</p>}
           <div className="flex gap-3">
             <Button type="submit" disabled={saving} className="flex-1 py-2.5 text-[14px]">
               {saving ? "กำลังบันทึก..." : "บันทึก"}
@@ -104,7 +104,18 @@ export default function BudgetCard({
     );
   }
 
-  const barColor = progress.over ? "var(--expense)" : "var(--accent)";
+  const fillPct = Math.min(100, progress.pct);
+  // The ramp is sized to the whole track, not to the fill, so the colour at the
+  // tip says how far through the budget you are: blue early, yellow near the
+  // limit. Over budget drops the ramp for the expense colour.
+  const barStyle: React.CSSProperties = progress.over
+    ? { width: "100%", background: "var(--expense)" }
+    : {
+        width: `${fillPct}%`,
+        backgroundImage:
+          "linear-gradient(90deg, var(--ramp-from), var(--ramp-mid), var(--ramp-to))",
+        backgroundSize: fillPct > 0 ? `${10000 / fillPct}% 100%` : "100% 100%",
+      };
 
   return (
     <Card className="mb-4 rounded-[22px] p-[18px_20px]">
@@ -119,10 +130,7 @@ export default function BudgetCard({
         {/* Width is data, so it is an inline style — Tailwind cannot generate a
             runtime w-[…] class. Clamped here while pct above stays honest. */}
         <div className="h-2.5 w-full overflow-hidden rounded-full bg-border">
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${Math.min(100, progress.pct)}%`, background: barColor }}
-          />
+          <div className="h-full rounded-full" style={barStyle} />
         </div>
 
         <div className="mt-2 flex items-baseline justify-between">

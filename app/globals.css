@@ -18,6 +18,10 @@
   --color-expense: var(--expense);
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
+  --color-link: var(--link);
+  --color-danger: var(--danger);
+  --color-action: var(--action);
+  --color-action-text: var(--action-text);
   --color-ember: var(--ember);
   --color-ember-soft: var(--ember-soft);
   --color-nav: var(--nav-bg);
@@ -49,6 +53,28 @@
   --ember: #f26419;
   --ember-soft: rgba(242, 100, 25, 0.16);
   --shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  /* Text that takes you somewhere: links and the active tab. Blue, so that
+     green is left to mean money coming in. */
+  --link: #1d5fa8;
+  /* Something went wrong, or a button that deletes. Red is used for nothing
+     else: orange is an ordinary expense, not a fault. */
+  --danger: #dc2626;
+  /* The primary button and the field being edited. Kept apart from --accent,
+     which stays the colour of money coming in. --action is the single-colour
+     edge (focus border, selected ring). --action-fill is a whole background
+     value, not just a colour, because dark fills the button with a gradient. */
+  --action: #092f56;
+  --action-fill: #092f56;
+  --action-text: #ffffff;
+  /* What the border of a focused field is painted with. An image rather than
+     a colour so dark can use a gradient; light is one flat stop. */
+  --action-edge: linear-gradient(var(--action), var(--action));
+  /* Three stops of the chart ramp (budget bar, week bars): cool at the start,
+     warm toward the limit. Deeper than the dark set so the warm end still
+     shows on a white card. */
+  --ramp-from: #1d5fa8;
+  --ramp-mid: #0d9488;
+  --ramp-to: #d99a06;
   --nav-bg: #ffffff;
   --food: oklch(0.88 0.08 40);
   --transport: oklch(0.88 0.06 230);
@@ -73,6 +99,17 @@
   --accent-soft: rgba(16, 185, 129, 0.18);
   --ember-soft: rgba(242, 100, 25, 0.24);
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --link: #6aa5e0;
+  --danger: #fb8585;
+  /* Dark fills the button with the cool half of the chart ramp, stopping at
+     its middle stop; edges take that same stop. */
+  --action: var(--ramp-mid);
+  --action-fill: linear-gradient(90deg, var(--ramp-from), var(--ramp-mid));
+  --action-text: #0f172a;
+  --action-edge: var(--action-fill);
+  --ramp-from: #3b7fc4;
+  --ramp-mid: #2ec4a6;
+  --ramp-to: #f5d05a;
   --nav-bg: #363636;
   /* Same hues as the light avatars, at one lightness that stays visible on
      the charcoal card. */
@@ -90,6 +127,39 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* Focused text fields. A gradient cannot be a border-color, and border-image
+   ignores the radius, so the border goes transparent and two backgrounds do
+   the work: the card colour clipped to the padding box, the edge behind it
+   out to the border box. Every field in the app sits on a card surface,
+   filled or not, which is why --card is the inner colour. */
+.focus-edge:focus {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    var(--action-edge) border-box;
+}
+
+/* The ring round a selected category. Tailwind's ring is a box-shadow and can
+   only be one colour, so this draws it instead: a disc of the edge 4px larger
+   than the button, masked down to its outer 2px. That leaves a 2px gap, the
+   same shape as ring-2 + ring-offset-2, with whatever is behind showing
+   through rather than a painted offset colour. */
+.selected-ring {
+  position: relative;
+}
+.selected-ring::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  padding: 2px;
+  border-radius: 9999px;
+  background: var(--action-edge);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
 }
 
 /* Native date/number inputs pick up the theme's control colors */

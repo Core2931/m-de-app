@@ -113,7 +113,7 @@ export default function ExpensesPage() {
       )}
 
       {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}
-      {error && <p className="text-sm text-accent">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       {!isLoading && !error && dailyTotals.length === 0 && (
         <p className="text-center text-sm text-sub">ไม่มีรายการ</p>
       )}

@@ -37,12 +37,28 @@ export default function WeekChart({ days }: WeekChartProps) {
                 className="w-full rounded-[6px]"
                 style={{
                   height: h,
-                  background: day.isToday ? "var(--accent)" : "var(--accent2)",
-                  opacity: day.total > 0 ? 1 : 0.35,
+                  // Sized to the chart, not the bar, and pinned to the bottom:
+                  // every bar is a slice of the same ramp, so a taller bar
+                  // climbs further into the warm end.
+                  backgroundImage:
+                    "linear-gradient(0deg, var(--ramp-from), var(--ramp-mid), var(--ramp-to))",
+                  backgroundSize: `100% ${CHART_H}px`,
+                  backgroundPosition: "bottom",
+                  // Today used to be a different colour; with one ramp for all
+                  // bars it is the full-strength one instead.
+                  opacity: day.total > 0 ? (day.isToday ? 1 : 0.55) : 0.35,
                 }}
               />
             </div>
-            <span className="text-[10.5px] font-medium text-sub">{day.label}</span>
+            <span
+              className={
+                day.isToday
+                  ? "text-[10.5px] font-semibold text-text"
+                  : "text-[10.5px] font-medium text-sub"
+              }
+            >
+              {day.label}
+            </span>
           </div>
         );
       })}

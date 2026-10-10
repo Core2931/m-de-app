@@ -28,7 +28,7 @@ export default function CategoryPicker({ value, onChange }: CategoryPickerProps)
             aria-pressed={selected}
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full text-[15px] font-semibold text-text transition-transform active:scale-95",
-              selected && "ring-2 ring-accent ring-offset-2 ring-offset-card"
+              selected && "selected-ring"
             )}
             style={{ background: CATEGORY_COLOR_VAR[cat] }}
           >

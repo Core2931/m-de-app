@@ -17,6 +17,18 @@ import { buildKnownPeople } from "@/lib/people";
 import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { formatCurrency } from "@/lib/formatters";
 
+// Inline like the icons in DateField — the project has no icon library.
+function TrashIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
 export default function EditExpensePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -168,7 +180,7 @@ export default function EditExpensePage() {
               />
               <SplitPreview remark={remark} knownPeople={knownPeople} />
             </div>
-            {error && <p className="text-sm text-accent">{error}</p>}
+            {error && <p className="text-sm text-danger">{error}</p>}
             {summary && summary.splits.length > 0 && (
               <div className="rounded-[14px] border border-border p-3 text-[13px]">
                 <div className="flex justify-between py-0.5">
@@ -194,7 +206,14 @@ export default function EditExpensePage() {
               <Button type="submit" disabled={saving} className="flex-1">
                 {saving ? "กำลังบันทึก..." : "บันทึก"}
               </Button>
-              <Button type="button" variant="danger" disabled={saving} onClick={handleDelete}>
+              <Button
+                type="button"
+                variant="danger"
+                disabled={saving}
+                onClick={handleDelete}
+                className="inline-flex items-center justify-center gap-1.5"
+              >
+                <TrashIcon />
                 ลบ
               </Button>
             </div>

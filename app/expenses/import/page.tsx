@@ -121,7 +121,7 @@ export default function ImportSlipsPage() {
       <h1 className="mb-2 text-[26px] font-bold leading-tight text-text">เพิ่มจากสลิป</h1>
       <p className="mb-5 text-[13px] text-sub">
         รูปถูกอ่านในเครื่องนี้ ไม่ถูกส่งออกและไม่ถูกเก็บ ·{" "}
-        <Link href="/expenses/new" className="font-semibold text-accent">
+        <Link href="/expenses/new" className="font-semibold text-link">
           กรอกเอง
         </Link>
       </p>
@@ -139,9 +139,9 @@ export default function ImportSlipsPage() {
           />
         </label>
         {!isLoaded && !storeError && <p className="mt-3 text-sm text-sub">กำลังโหลดข้อมูล...</p>}
-        {storeError && <p className="mt-3 text-sm text-accent">{storeError}</p>}
+        {storeError && <p className="mt-3 text-sm text-danger">{storeError}</p>}
         {status && <p className="mt-3 text-sm text-sub">{status}</p>}
-        {error && <p className="mt-3 text-sm text-accent">{error}</p>}
+        {error && <p className="mt-3 text-sm text-danger">{error}</p>}
         {savedCount !== null && (
           <p className="mt-3 text-sm text-accent">✓ บันทึกแล้ว {savedCount} รายการ</p>
         )}
