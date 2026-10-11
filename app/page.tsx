@@ -137,9 +137,6 @@ export default function DashboardPage() {
               <p className="text-[12px] text-sub">อีก {daysLeft} วันเงินออก</p>
             </>
           )}
-          {cycleMyShare !== cycleTotal && (
-            <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(cycleMyShare)}</p>
-          )}
         </Card>
       </div>
 
