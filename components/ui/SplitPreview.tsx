@@ -66,7 +66,7 @@ export default function SplitPreview({ remark, knownPeople = [] }: SplitPreviewP
       )}
 
       {needsNames && (
-        <p className="text-[12px] text-danger">
+        <p className="text-[12px] text-expense">
           แทน <span className="font-medium">?</span> ด้วยชื่อคนที่หารด้วยก่อนบันทึก
         </p>
       )}
