@@ -66,7 +66,7 @@ export default function SplitPreview({ remark, knownPeople = [] }: SplitPreviewP
       )}
 
       {needsNames && (
-        <p className="text-[12px] text-expense">
+        <p className="text-[12px] text-danger">
           แทน <span className="font-medium">?</span> ด้วยชื่อคนที่หารด้วยก่อนบันทึก
         </p>
       )}
@@ -90,7 +90,7 @@ export default function SplitPreview({ remark, knownPeople = [] }: SplitPreviewP
       })}
 
       {invalid && (
-        <p className="text-[12px] text-expense">
+        <p className="text-[12px] text-danger">
           ⚠ อ่าน format ไม่ออก — ใช้แบบ <span className="font-medium">ขนม: [50] ค่าอาหาร</span>{" "}
           (ถ้าเขาออกให้เรา ใส่ <span className="font-medium">ขนมจ่าย:</span>) คั่นหลายคนด้วย ;
         </p>
