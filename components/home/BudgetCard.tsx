@@ -107,9 +107,9 @@ export default function BudgetCard({
   const fillPct = Math.min(100, progress.pct);
   // The ramp is sized to the whole track, not to the fill, so the colour at the
   // tip says how far through the budget you are: blue early, yellow near the
-  // limit. Over budget drops the ramp for the expense colour.
+  // limit. Over budget drops the ramp for the danger colour.
   const barStyle: React.CSSProperties = progress.over
-    ? { width: "100%", background: "var(--expense)" }
+    ? { width: "100%", background: "var(--danger)" }
     : {
         width: `${fillPct}%`,
         backgroundImage:
@@ -140,7 +140,7 @@ export default function BudgetCard({
           <span
             className={
               progress.over
-                ? "text-[13px] font-semibold text-expense"
+                ? "text-[13px] font-semibold text-danger"
                 : "text-[13px] font-semibold text-accent"
             }
           >

@@ -46,7 +46,7 @@ export default function WeekChart({ days }: WeekChartProps) {
                   backgroundPosition: "bottom",
                   // Today used to be a different colour; with one ramp for all
                   // bars it is the full-strength one instead.
-                  opacity: day.total > 0 ? (day.isToday ? 1 : 0.55) : 0.35,
+                  opacity: day.total > 0 ? (day.isToday ? 1 : 0.75) : 0.35,
                 }}
               />
             </div>

@@ -39,7 +39,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className={`${ibmPlexThai.variable} h-full antialiased`}>
+    // themeInit adds the dark class before hydration, so the class list differs from the server HTML.
+    <html lang="th" className={`${ibmPlexThai.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
