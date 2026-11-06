@@ -18,6 +18,7 @@ import { useSettlementStore } from "@/store/settlementStore";
 import { useBudgetStore } from "@/store/budgetStore";
 import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
 import { computeBudgetProgress, dailyAllowance, findBudgetForMonth } from "@/lib/budgets";
+import { todayPace } from "@/lib/pace";
 import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
 import { cycleFor, daysLeftInCycle, missingHolidayYear } from "@/lib/payCycle";
 import { myShareForRange, totalForRange } from "@/lib/rangeTotals";
@@ -94,6 +95,10 @@ export default function DashboardPage() {
     findBudgetForMonth(budgets, cycle.budgetMonth)
   );
 
+  // Colours today's number by how far past the start-of-day allowance it is.
+  const pace = todayPace(budgetProgress, todayMyShare, daysLeft);
+  const PACE_TEXT = ["text-text", "text-pace-1", "text-pace-2", "text-danger"] as const;
+
   // Gated on both stores. A bar rendered before the data lands shows 0% spent,
   // which reads as "nothing spent this cycle" — the same lie three earlier
   // fixes in this app were about.
@@ -118,9 +123,17 @@ export default function DashboardPage() {
       <div className="mb-4 grid grid-cols-2 gap-3">
         <Card className="rounded-[20px] p-[18px_20px]">
           <p className="mb-2 text-[13px] font-medium text-sub">วันนี้</p>
-          <p className="text-[26px] font-bold text-expense">{formatCurrency(todayTotal)}</p>
+          <p className={`text-[26px] font-bold ${PACE_TEXT[pace?.level ?? 0]}`}>
+            {formatCurrency(todayTotal)}
+          </p>
           {todayMyShare !== todayTotal && (
             <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(todayMyShare)}</p>
+          )}
+          {/* Words as well as colour, so the level is not carried by hue alone. */}
+          {pace && pace.level > 0 && (
+            <p className={`mt-1 text-[12px] font-medium ${PACE_TEXT[pace.level]}`}>
+              เกินแผน {formatCurrency(pace.overBy)}
+            </p>
           )}
         </Card>
         <Card className="rounded-[20px] p-[18px_20px]">
