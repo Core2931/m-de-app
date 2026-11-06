@@ -20,29 +20,29 @@ function build(spent: Record<string, number>, budget: number | null, today = "20
 }
 
 describe("buildCycleCalendar layout", () => {
-  it("lays out Monday-first weeks, blank before the start and after the end", () => {
+  it("lays out Sunday-first weeks, blank before the start and after the end", () => {
     const weeks = build({}, null);
-    // Thu start: Mon Tue Wed are blank
-    expect(weeks[0].cells.slice(0, 3)).toEqual([null, null, null]);
-    expect(weeks[0].cells[3]?.date).toBe("2026-10-29");
-    // Thu end: Fri Sat Sun are blank
+    // Thu start: Sun Mon Tue Wed are blank
+    expect(weeks[0].cells.slice(0, 4)).toEqual([null, null, null, null]);
+    expect(weeks[0].cells[4]?.date).toBe("2026-10-29");
+    // Thu end: Fri Sat are blank
     const last = weeks[weeks.length - 1];
-    expect(last.cells[3]?.date).toBe("2026-11-26");
-    expect(last.cells.slice(4)).toEqual([null, null, null]);
+    expect(last.cells[4]?.date).toBe("2026-11-26");
+    expect(last.cells.slice(5)).toEqual([null, null]);
     expect(weeks.every((w) => w.cells.length === 7)).toBe(true);
     expect(weeks.flatMap((w) => w.cells).filter(Boolean)).toHaveLength(29);
   });
 
-  it("a cycle that starts on Monday has no leading blanks", () => {
-    const monday: PayCycle = {
+  it("a cycle that starts on Sunday has no leading blanks", () => {
+    const sunday: PayCycle = {
       ...cycle,
-      start: "2026-11-02",
-      end: "2026-11-08",
-      nextPayday: "2026-11-09",
+      start: "2026-11-01",
+      end: "2026-11-07",
+      nextPayday: "2026-11-08",
     };
     const weeks = buildCycleCalendar({
-      cycle: monday,
-      today: "2026-11-02",
+      cycle: sunday,
+      today: "2026-11-01",
       budget: null,
       spentByDate: new Map(),
     });
@@ -65,6 +65,7 @@ describe("buildCycleCalendar layout", () => {
 
   it("sums each week", () => {
     const weeks = build({ "2026-10-29": 100, "2026-10-31": 50, "2026-11-02": 70 }, null);
+    // Week 0 is Thu 29 Oct to Sat 31 Oct; week 1 starts Sun 1 Nov.
     expect(weeks[0].total).toBe(150);
     expect(weeks[1].total).toBe(70);
   });
@@ -73,15 +74,15 @@ describe("buildCycleCalendar layout", () => {
 describe("buildCycleCalendar levels", () => {
   // Budget 2,900 over 29 days = 100 a day on the first day.
   it("the first day is judged against budget / days", () => {
-    expect(build({ "2026-10-29": 100 }, 2900)[0].cells[3]).toMatchObject({ spent: 100, level: 0 });
-    expect(build({ "2026-10-29": 130 }, 2900)[0].cells[3]?.level).toBe(2);
+    expect(build({ "2026-10-29": 100 }, 2900)[0].cells[4]).toMatchObject({ spent: 100, level: 0 });
+    expect(build({ "2026-10-29": 130 }, 2900)[0].cells[4]?.level).toBe(2);
   });
 
   it("the next day's allowance shrinks after an overspend (rolling)", () => {
     // 300 on day one leaves 2600 over 28 days = 92, so 100 is a little over.
     const weeks = build({ "2026-10-29": 300, "2026-10-30": 100 }, 2900);
-    expect(weeks[0].cells[3]?.level).toBe(3);
-    expect(weeks[0].cells[4]?.level).toBe(1);
+    expect(weeks[0].cells[4]?.level).toBe(3);
+    expect(weeks[0].cells[5]?.level).toBe(1);
   });
 
   it("a day with no spending stays level 0 even when the budget is gone", () => {
@@ -91,17 +92,14 @@ describe("buildCycleCalendar levels", () => {
 
   it("a week's cap is its first day's allowance times its days in the cycle", () => {
     const weeks = build({}, 2900);
-    // First row has 4 days (Thu to Sun), 100 a day.
-    expect(weeks[0].cap).toBe(400);
+    // First row has 3 days (Thu to Sat), 100 a day.
+    expect(weeks[0].cap).toBe(300);
   });
 
   it("a week over its cap is coloured", () => {
-    // Cap 400, spent 520 = 1.3x.
-    const weeks = build(
-      { "2026-10-29": 100, "2026-10-30": 100, "2026-10-31": 100, "2026-11-01": 220 },
-      2900
-    );
-    expect(weeks[0].total).toBe(520);
+    // Cap 300, spent 390 = 1.3x.
+    const weeks = build({ "2026-10-29": 100, "2026-10-30": 100, "2026-10-31": 190 }, 2900);
+    expect(weeks[0].total).toBe(390);
     expect(weeks[0].level).toBe(2);
   });
 });

@@ -12,7 +12,7 @@ export interface CalendarDay {
 }
 
 export interface CalendarWeek {
-  /** Monday to Sunday. Null where the cycle has not started or has ended. */
+  /** Sunday to Saturday. Null where the cycle has not started or has ended. */
   cells: (CalendarDay | null)[];
   total: number;
   /** What the week's days in this cycle were allowed, or null without a budget. */
@@ -37,13 +37,13 @@ function daysBetween(from: string, to: string): number {
   return Math.round((toDate(to).getTime() - toDate(from).getTime()) / 86_400_000);
 }
 
-/** 0 = Monday, 6 = Sunday. */
-function mondayIndex(iso: string): number {
-  return (toDate(iso).getUTCDay() + 6) % 7;
+/** Column of a date in a Sunday-first week: 0 = Sunday, 6 = Saturday. */
+function weekdayIndex(iso: string): number {
+  return toDate(iso).getUTCDay();
 }
 
 /**
- * The cycle laid out as Monday-first weeks, each day coloured by how it did
+ * The cycle laid out as Sunday-first weeks, each day coloured by how it did
  * against the allowance it had at the START of that day: what the budget had
  * left after earlier days, spread over the days left from then (that day
  * included). Same definition as todayPace, so yesterday and today are judged
@@ -65,7 +65,7 @@ export function buildCycleCalendar(input: {
   const budgetValue = budget !== null && Number.isFinite(budget) && budget > 0 ? budget : null;
 
   const weeks: CalendarWeek[] = [];
-  let cells: (CalendarDay | null)[] = Array(mondayIndex(cycle.start)).fill(null);
+  let cells: (CalendarDay | null)[] = Array(weekdayIndex(cycle.start)).fill(null);
   let weekTotal = 0;
   let weekDays = 0;
   let weekAllowance: number | null = null;

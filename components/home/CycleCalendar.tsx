@@ -2,7 +2,7 @@ import { formatCompact, formatCurrency } from "@/lib/formatters";
 import type { CalendarWeek } from "@/lib/cycleCalendar";
 import type { PaceLevel } from "@/lib/pace";
 
-const DAY_LABELS = ["จ", "อ", "พ", "พฤ", "ศ", "ส", "อา"];
+const DAY_LABELS = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
 
 // Same colours as today's number on the home cards: one meaning everywhere.
 const LEVEL_TEXT = ["text-text", "text-pace-1", "text-pace-2", "text-danger"] as const;
