@@ -8,6 +8,25 @@ import {
 import { parseRemark } from "@/lib/splits";
 
 describe("appendPersonBlock", () => {
+  it("paidByThem เขียนชื่อต่อท้ายด้วย จ่าย", () => {
+    const { text, caret } = appendPersonBlock("", "ขนม", { paidByThem: true });
+    expect(text).toBe("ขนมจ่าย: [] ");
+    expect(text.slice(caret - 1, caret + 1)).toBe("[]");
+  });
+
+  it("amount ที่ใส่มาแล้วไม่เหลืออะไรให้พิมพ์ caret ไปท้ายสุด", () => {
+    const { text, caret } = appendPersonBlock("", "ขนม", { amount: 320 });
+    expect(text).toBe("ขนม: [320] ");
+    expect(caret).toBe(text.length);
+  });
+
+  it("paidByThem + amount parse เป็น i_owe ตามยอด", () => {
+    const { text } = appendPersonBlock("", "ขนม", { paidByThem: true, amount: 320 });
+    expect(parseRemark(text).splits).toEqual([
+      { person: "ขนม", amount: 320, label: "", direction: "i_owe" },
+    ]);
+  });
+
   it("ต่อบนหมายเหตุว่าง ไม่มีตัวคั่นนำหน้า", () => {
     const { text } = appendPersonBlock("", "ขนม");
     expect(text).toBe("ขนม: [] ");

@@ -46,11 +46,24 @@ export function nameFragmentAtCaret(remark: string, caret: number): string | nul
   return fragment.length > 0 ? fragment : null;
 }
 
+export interface PersonBlockOptions {
+  /** They paid and we owe them, which the remark writes as "ชื่อจ่าย". */
+  paidByThem?: boolean;
+  /** Pre-filled amount. With one there is nothing left to type. */
+  amount?: number;
+}
+
 /**
  * Appends "ชื่อ: [] " and returns the caret position between the brackets.
  * Never rewrites what is already there — existing names and amounts are data.
+ *
+ * With an amount the brackets are already full, so the caret goes to the end.
  */
-export function appendPersonBlock(remark: string, person: string): RemarkEdit {
+export function appendPersonBlock(
+  remark: string,
+  person: string,
+  { paidByThem = false, amount }: PersonBlockOptions = {}
+): RemarkEdit {
   const base = remark.replace(/\s+$/, "");
 
   let prefix: string;
@@ -60,10 +73,11 @@ export function appendPersonBlock(remark: string, person: string): RemarkEdit {
   else if (SEGMENT_SEPARATORS.test(base[base.length - 1])) prefix = `${base} `;
   else prefix = `${base}; `;
 
-  const text = `${prefix}${person}: [] `;
-  // text ends with "[] ": index length-3 is "[", length-2 is "]", so
-  // length-2 puts the cursor between them.
-  return { text, caret: text.length - 2 };
+  const name = paidByThem ? `${person}จ่าย` : person;
+  const text = `${prefix}${name}: [${amount ?? ""}] `;
+  // Without an amount text ends with "[] ": index length-3 is "[", length-2 is
+  // "]", so length-2 puts the cursor between them.
+  return { text, caret: amount === undefined ? text.length - 2 : text.length };
 }
 
 /** Replaces the partial name at the caret with a known one, keeping the rest. */
