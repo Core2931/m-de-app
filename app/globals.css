@@ -20,6 +20,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-link: var(--link);
   --color-danger: var(--danger);
+  --color-pace-1: var(--pace-1);
+  --color-pace-2: var(--pace-2);
   --color-action: var(--action);
   --color-action-text: var(--action-text);
   --color-ember: var(--ember);
@@ -59,6 +61,10 @@
   /* Something went wrong, or a button that deletes. Red is used for nothing
      else: orange is an ordinary expense, not a fault. */
   --danger: #dc2626;
+  /* Today's spend against the daily allowance: yellow, then orange; red is
+     --danger. Text on the card, so each is deep enough for 4.5:1 on white. */
+  --pace-1: #a16207;
+  --pace-2: #c2410c;
   /* The primary button and the field being edited. Kept apart from --accent,
      which stays the colour of money coming in. --action is the single-colour
      edge (focus border, selected ring). --action-fill is a whole background
@@ -101,6 +107,8 @@
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   --link: #6aa5e0;
   --danger: #fb8585;
+  --pace-1: #facc15;
+  --pace-2: #fb923c;
   /* Dark fills the button with the cool half of the chart ramp, stopping at
      its middle stop; edges take that same stop. */
   --action: var(--ramp-mid);

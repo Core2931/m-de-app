@@ -4,15 +4,16 @@ import { useState } from "react";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDateShort } from "@/lib/formatters";
+import type { BudgetForecast } from "@/lib/forecast";
 import type { BudgetProgress } from "@/lib/budgets";
 
 interface BudgetCardProps {
   progress: BudgetProgress | null;
   /** The raw cycle total, shown only when it differs from myShare. */
   cycleTotal: number;
-  /** Whole baht per remaining day, or null when there is nothing to say. */
-  dailyAllowance: number | null;
+  /** Where the budget is heading at the current pace, or null when too early to say. */
+  forecast: BudgetForecast | null;
   /** The cycle's budget month is the caller's business — it closes over it here. */
   onSave: (amount: number | null) => Promise<void>;
 }
@@ -20,7 +21,7 @@ interface BudgetCardProps {
 export default function BudgetCard({
   progress,
   cycleTotal,
-  dailyAllowance,
+  forecast,
   onSave,
 }: BudgetCardProps) {
   const [editing, setEditing] = useState(false);
@@ -150,9 +151,15 @@ export default function BudgetCard({
           </span>
         </div>
 
-        {dailyAllowance !== null && (
-          <p className="mt-1 text-[12px] text-sub">
-            ใช้ได้วันละ {formatCurrency(dailyAllowance)}
+        {forecast && (
+          <p
+            className={`mt-1 text-[12px] ${
+              forecast.kind === "short" ? "font-medium text-pace-2" : "text-sub"
+            }`}
+          >
+            {forecast.kind === "short"
+              ? `ที่ความเร็วนี้ เงินหมดวันที่ ${formatDateShort(forecast.runOutDate)} (ก่อนเงินออก ${forecast.daysShort} วัน)`
+              : `ที่ความเร็วนี้ ถึงเงินออกเหลือราว ${formatCurrency(Math.round(forecast.left))}`}
           </p>
         )}
 
