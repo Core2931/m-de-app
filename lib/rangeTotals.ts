@@ -22,3 +22,17 @@ export function myShareForRange(expenses: Expense[], from: string, to: string): 
     .filter((e) => inRange(e, from, to))
     .reduce((sum, e) => sum + summarizeExpense(e).myShare, 0);
 }
+
+/** myShare per day for expenses dated `from`..`to`, keyed by ISO date. */
+export function myShareByDate(
+  expenses: Expense[],
+  from: string,
+  to: string
+): Map<string, number> {
+  const byDate = new Map<string, number>();
+  for (const expense of expenses) {
+    if (!inRange(expense, from, to)) continue;
+    byDate.set(expense.date, (byDate.get(expense.date) ?? 0) + summarizeExpense(expense).myShare);
+  }
+  return byDate;
+}

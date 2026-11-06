@@ -6,13 +6,12 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import Screen from "@/components/layout/Screen";
-import WeekChart from "@/components/home/WeekChart";
+import CycleCalendar from "@/components/home/CycleCalendar";
 import BudgetCard from "@/components/home/BudgetCard";
 import {
   useExpenseStore,
   selectTotalForDate,
   selectMyShareForDate,
-  selectWeek,
 } from "@/store/expenseStore";
 import { useSettlementStore } from "@/store/settlementStore";
 import { useBudgetStore } from "@/store/budgetStore";
@@ -21,7 +20,8 @@ import { computeBudgetProgress, dailyAllowance, findBudgetForMonth } from "@/lib
 import { todayPace } from "@/lib/pace";
 import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
 import { cycleFor, daysLeftInCycle, missingHolidayYear } from "@/lib/payCycle";
-import { myShareForRange, totalForRange } from "@/lib/rangeTotals";
+import { myShareByDate, myShareForRange, totalForRange } from "@/lib/rangeTotals";
+import { buildCycleCalendar } from "@/lib/cycleCalendar";
 
 const TODAY_CAP = 4;
 
@@ -78,7 +78,6 @@ export default function DashboardPage() {
   const missingYear = missingHolidayYear(cycle);
   const todayTotal = selectTotalForDate(expenses, today);
   const cycleTotal = totalForRange(expenses, cycle.start, cycle.end);
-  const week = selectWeek(expenses);
   const todayMyShare = selectMyShareForDate(expenses, today);
   const cycleMyShare = myShareForRange(expenses, cycle.start, cycle.end);
   const totals = summarizeBalances(buildPersonBalances(expenses, settlements));
@@ -94,6 +93,13 @@ export default function DashboardPage() {
     cycleMyShare,
     findBudgetForMonth(budgets, cycle.budgetMonth)
   );
+
+  const calendar = buildCycleCalendar({
+    cycle,
+    today,
+    budget: budgetProgress?.budget ?? null,
+    spentByDate: myShareByDate(expenses, cycle.start, cycle.end),
+  });
 
   // Colours today's number by how far past the start-of-day allowance it is.
   const pace = todayPace(budgetProgress, todayMyShare, daysLeft);
@@ -193,9 +199,12 @@ export default function DashboardPage() {
         </Link>
       )}
 
-      <Card className="mb-4 rounded-[22px] p-[20px_22px]">
-        <p className="mb-[14px] text-[13px] font-medium text-sub">สัปดาห์นี้</p>
-        <WeekChart days={week} />
+      <Card className="mb-4 rounded-[22px] p-[20px_14px]">
+        <p className="mb-[14px] px-2 text-[13px] font-medium text-sub">รายวันในรอบนี้</p>
+        {/* Gated like the cards above: the grid is built from "today", which
+            the prerendered HTML does not know, and colours judged before the
+            budget lands would flip. The placeholder holds the space. */}
+        {showBudget ? <CycleCalendar weeks={calendar} /> : <div className="h-[260px]" />}
       </Card>
 
       <Card className="rounded-[22px] p-[20px_22px]">

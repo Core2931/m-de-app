@@ -43,17 +43,32 @@ export function todayPace(
 
   const allowance = Math.max(0, Math.floor((progress.remaining + todayMyShare) / daysLeft));
 
-  // Integer satang, so float dust in summed expenses cannot flip a boundary.
-  const spentSatang = Math.round(todayMyShare * 100);
-  const allowanceSatang = allowance * 100;
+  return { ...paceLevel(todayMyShare, allowance), allowance };
+}
+
+/**
+ * Where a spend sits against an allowance, in whole baht. Shared by the day
+ * cells and the week totals of the calendar so one colour always means the
+ * same thing.
+ *
+ * Integer satang, so float dust in summed expenses cannot flip a boundary.
+ * An allowance of zero (budget already spent) makes any spending the worst
+ * level, and an empty day stays level 0.
+ */
+export function paceLevel(
+  spent: number,
+  allowance: number
+): { level: PaceLevel; overBy: number } {
+  const spentSatang = Math.round(spent * 100);
+  const allowanceSatang = Math.round(allowance * 100);
   const overSatang = spentSatang - allowanceSatang;
 
-  if (overSatang <= 0) return { level: 0, allowance, overBy: 0 };
+  if (overSatang <= 0) return { level: 0, overBy: 0 };
 
   const overBy = overSatang / 100;
-  if (allowanceSatang === 0) return { level: 3, allowance, overBy };
+  if (allowanceSatang <= 0) return { level: 3, overBy };
 
   const ratio = spentSatang / allowanceSatang;
   const level: PaceLevel = ratio <= STEP_1 ? 1 : ratio <= STEP_2 ? 2 : 3;
-  return { level, allowance, overBy };
+  return { level, overBy };
 }
