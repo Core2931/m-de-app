@@ -202,7 +202,7 @@ export default function DateField({
           onChange={(e) => handleText(e.target.value)}
           required={required}
           className={cn(
-            "w-full rounded-xl border border-border px-3 py-[11px] pr-10 text-[15px] text-text outline-none",
+            "w-full rounded-xl border border-border px-3 py-[11px] pr-10 text-[16px] text-text outline-none",
             "placeholder:text-sub focus-edge transition-colors",
             filled ? "bg-card" : "bg-transparent"
           )}
