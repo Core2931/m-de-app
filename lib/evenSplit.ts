@@ -70,24 +70,46 @@ export function splitEvenly(amount: number, ways: number): EvenSplit | null {
  * Existing text is never rewritten — names and amounts already in the remark
  * are data. If that pushes the total over the bill, SplitPreview's existing
  * over-allocation warning fires, which is the correct feedback.
+ *
+ * When someone else paid, the remark only records what WE owe them, so a
+ * single "?จ่าย" block with our share is all that gets written, however many
+ * ways the bill was split. What the other diners owe the payer is not ours to
+ * track.
  */
-export function buildEvenSplitRemark(remark: string, split: EvenSplit): string {
+export function buildEvenSplitRemark(
+  remark: string,
+  split: EvenSplit,
+  paidByThem = false
+): string {
+  const blocks = paidByThem ? 1 : split.others;
   let text = remark;
-  for (let i = 0; i < split.others; i++) {
-    const appended = appendPersonBlock(text, PLACEHOLDER_PERSON);
-    // appendPersonBlock leaves its caret inside "[]" — drop the share there.
-    text =
-      appended.text.slice(0, appended.caret) +
-      String(split.share) +
-      appended.text.slice(appended.caret);
+  for (let i = 0; i < blocks; i++) {
+    text = appendPersonBlock(text, PLACEHOLDER_PERSON, {
+      paidByThem,
+      amount: split.share,
+    }).text;
   }
   return text;
 }
 
+/**
+ * A two-way split with a person we already know: their name and the half in
+ * one go, so nothing is left to type. Pass a split from splitEvenly(amount, 2).
+ */
+export function buildPairSplitRemark(
+  remark: string,
+  split: EvenSplit,
+  person: string,
+  paidByThem: boolean
+): string {
+  return appendPersonBlock(remark, person, { paidByThem, amount: split.share }).text;
+}
+
 // A "?" inside a label is ordinary text ("ขนม: [50] ค่าอะไร?") and must not
 // count. Only a "?" in the NAME position — start of a segment, before the
-// colon — is an unfilled placeholder.
-const PLACEHOLDER_SEGMENT = /(^|[\n;])(\s*)(\?)(\s*):/;
+// colon — is an unfilled placeholder. "?จ่าย" is the same thing for a bill
+// someone else paid.
+const PLACEHOLDER_SEGMENT = /(^|[\n;])(\s*)(\?)(\s*)(?:จ่าย\s*)?:/;
 
 /** True while a generated split still has a name the user has not filled in. */
 export function hasPlaceholderPerson(remark: string): boolean {
