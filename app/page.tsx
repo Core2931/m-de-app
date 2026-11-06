@@ -18,6 +18,7 @@ import { useBudgetStore } from "@/store/budgetStore";
 import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
 import { computeBudgetProgress, dailyAllowance, findBudgetForMonth } from "@/lib/budgets";
 import { todayPace } from "@/lib/pace";
+import { forecastBudget } from "@/lib/forecast";
 import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
 import { cycleFor, daysLeftInCycle, missingHolidayYear } from "@/lib/payCycle";
 import { myShareByDate, myShareForRange, totalForRange } from "@/lib/rangeTotals";
@@ -101,6 +102,16 @@ export default function DashboardPage() {
     spentByDate: myShareByDate(expenses, cycle.start, cycle.end),
   });
 
+  const forecast = budgetProgress
+    ? forecastBudget({
+        spent: budgetProgress.spent,
+        remaining: budgetProgress.remaining,
+        cycleStart: cycle.start,
+        today,
+        nextPayday: cycle.nextPayday,
+      })
+    : null;
+
   // Colours today's number by how far past the start-of-day allowance it is.
   const pace = todayPace(budgetProgress, todayMyShare, daysLeft);
   const PACE_TEXT = ["text-text", "text-pace-1", "text-pace-2", "text-danger"] as const;
@@ -170,6 +181,7 @@ export default function DashboardPage() {
           progress={budgetProgress}
           cycleTotal={cycleTotal}
           dailyAllowance={dailyAllowance(budgetProgress, daysLeft)}
+          forecast={forecast}
           onSave={(amount) => saveBudget(cycle.budgetMonth, amount)}
         />
       )}

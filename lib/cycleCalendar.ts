@@ -1,3 +1,4 @@
+import { addDays, daysBetween } from "@/lib/isoDays";
 import { paceLevel, type PaceLevel } from "@/lib/pace";
 import type { PayCycle } from "@/lib/payCycle";
 
@@ -21,25 +22,9 @@ export interface CalendarWeek {
   isCurrent: boolean;
 }
 
-// Calendar dates only, in UTC, for the same reason payCycle does it: local
-// time would make the grid depend on the machine's timezone.
-function toDate(iso: string): Date {
-  return new Date(`${iso}T00:00:00.000Z`);
-}
-
-function addDays(iso: string, days: number): string {
-  const date = toDate(iso);
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
-}
-
-function daysBetween(from: string, to: string): number {
-  return Math.round((toDate(to).getTime() - toDate(from).getTime()) / 86_400_000);
-}
-
 /** Column of a date in a Sunday-first week: 0 = Sunday, 6 = Saturday. */
 function weekdayIndex(iso: string): number {
-  return toDate(iso).getUTCDay();
+  return new Date(`${iso}T00:00:00.000Z`).getUTCDay();
 }
 
 /**
