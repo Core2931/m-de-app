@@ -16,7 +16,7 @@ import {
 import { useSettlementStore } from "@/store/settlementStore";
 import { useBudgetStore } from "@/store/budgetStore";
 import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
-import { computeBudgetProgress, dailyAllowance, findBudgetForMonth } from "@/lib/budgets";
+import { computeBudgetProgress, findBudgetForMonth } from "@/lib/budgets";
 import { todayPace } from "@/lib/pace";
 import { forecastBudget } from "@/lib/forecast";
 import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
@@ -147,9 +147,15 @@ export default function DashboardPage() {
             <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(todayMyShare)}</p>
           )}
           {/* Words as well as colour, so the level is not carried by hue alone. */}
-          {pace && pace.level > 0 && (
-            <p className={`mt-1 text-[12px] font-medium ${PACE_TEXT[pace.level]}`}>
-              เกินแผน {formatCurrency(pace.overBy)}
+          {pace && (
+            <p
+              className={`mt-1 text-[12px] ${
+                pace.level > 0 ? `font-medium ${PACE_TEXT[pace.level]}` : "text-sub"
+              }`}
+            >
+              {pace.level > 0
+                ? `เกิน ${formatCurrency(pace.overBy)} · วันละ ${formatCurrency(pace.allowance)}`
+                : `ใช้ได้วันละ ${formatCurrency(pace.allowance)}`}
             </p>
           )}
         </Card>
@@ -180,7 +186,6 @@ export default function DashboardPage() {
         <BudgetCard
           progress={budgetProgress}
           cycleTotal={cycleTotal}
-          dailyAllowance={dailyAllowance(budgetProgress, daysLeft)}
           forecast={forecast}
           onSave={(amount) => saveBudget(cycle.budgetMonth, amount)}
         />

@@ -12,8 +12,6 @@ interface BudgetCardProps {
   progress: BudgetProgress | null;
   /** The raw cycle total, shown only when it differs from myShare. */
   cycleTotal: number;
-  /** Whole baht per remaining day, or null when there is nothing to say. */
-  dailyAllowance: number | null;
   /** Where the budget is heading at the current pace, or null when too early to say. */
   forecast: BudgetForecast | null;
   /** The cycle's budget month is the caller's business — it closes over it here. */
@@ -23,7 +21,6 @@ interface BudgetCardProps {
 export default function BudgetCard({
   progress,
   cycleTotal,
-  dailyAllowance,
   forecast,
   onSave,
 }: BudgetCardProps) {
@@ -153,12 +150,6 @@ export default function BudgetCard({
               : `เหลือ ${formatCurrency(progress.remaining)}`}
           </span>
         </div>
-
-        {dailyAllowance !== null && (
-          <p className="mt-1 text-[12px] text-sub">
-            ใช้ได้วันละ {formatCurrency(dailyAllowance)}
-          </p>
-        )}
 
         {forecast && (
           <p
