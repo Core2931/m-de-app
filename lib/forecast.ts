@@ -51,3 +51,14 @@ export function forecastBudget(input: {
     daysShort: Math.max(1, daysBetween(runOutDate, nextPayday)),
   };
 }
+
+/**
+ * What a day has really cost so far this cycle: spent over the calendar days
+ * elapsed, today included. Days with nothing spent count, or the figure would
+ * flatter big days and disagree with the forecast, which uses the same average.
+ */
+export function dailyAverage(spent: number, cycleStart: string, today: string): number | null {
+  if (!Number.isFinite(spent) || spent <= 0) return null;
+  const elapsed = Math.max(1, daysBetween(cycleStart, today) + 1);
+  return spent / elapsed;
+}

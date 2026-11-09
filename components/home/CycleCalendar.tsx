@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatCompact, formatCurrency } from "@/lib/formatters";
 import type { CalendarWeek } from "@/lib/cycleCalendar";
 import type { PaceLevel } from "@/lib/pace";
@@ -58,15 +59,12 @@ function Row({ week }: { week: CalendarWeek }) {
       {week.cells.map((cell, i) => {
         if (!cell) return <span key={i} aria-hidden="true" />;
         const amount = cellAmount(cell.spent);
-        return (
-          <div
-            key={i}
-            aria-label={`วันที่ ${cell.day}${amount ? ` ใช้ ${amount} บาท` : ""}`}
-            className={`flex h-[44px] flex-col items-center justify-center rounded-[8px] ${
-              cell.isToday ? "ring-1 ring-inset ring-link" : ""
-            }`}
-            style={{ background: tint(cell.level) }}
-          >
+        const label = `วันที่ ${cell.day}${amount ? ` ใช้ ${amount} บาท` : ""}`;
+        const className = `flex h-[44px] flex-col items-center justify-center rounded-[8px] ${
+          cell.isToday ? "ring-1 ring-inset ring-link" : ""
+        }`;
+        const body = (
+          <>
             <span
               className={`text-[11px] leading-none ${
                 cell.isToday ? "font-bold text-text" : "text-sub"
@@ -81,6 +79,23 @@ function Row({ week }: { week: CalendarWeek }) {
             >
               {amount}
             </span>
+          </>
+        );
+        // A day with spending opens that day's list; an empty one has nothing
+        // to open, so it stays plain.
+        return amount ? (
+          <Link
+            key={i}
+            href={`/expenses?date=${cell.date}`}
+            aria-label={label}
+            className={`${className} transition-transform active:scale-95`}
+            style={{ background: tint(cell.level) }}
+          >
+            {body}
+          </Link>
+        ) : (
+          <div key={i} aria-label={label} className={className} style={{ background: tint(cell.level) }}>
+            {body}
           </div>
         );
       })}
