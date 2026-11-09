@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { forecastBudget } from "@/lib/forecast";
+import { dailyAverage, forecastBudget } from "@/lib/forecast";
 
 // Cycle 2026-10-29 .. 2026-11-26, next payday 2026-11-27.
 const base = { cycleStart: "2026-10-29", nextPayday: "2026-11-27" };
@@ -41,5 +41,21 @@ describe("forecastBudget", () => {
   it("exactly enough money is ok, not short", () => {
     const f = forecastBudget({ ...base, today: "2026-11-05", spent: 800, remaining: 2100 });
     expect(f).toEqual({ kind: "ok", left: 0 });
+  });
+});
+
+describe("dailyAverage", () => {
+  it("spent over the calendar days elapsed, today included", () => {
+    // 29 Oct to 5 Nov = 8 days
+    expect(dailyAverage(800, "2026-10-29", "2026-11-05")).toBe(100);
+  });
+
+  it("the first day divides by one", () => {
+    expect(dailyAverage(250, "2026-10-29", "2026-10-29")).toBe(250);
+  });
+
+  it("null with nothing spent", () => {
+    expect(dailyAverage(0, "2026-10-29", "2026-11-05")).toBeNull();
+    expect(dailyAverage(Number.NaN, "2026-10-29", "2026-11-05")).toBeNull();
   });
 });

@@ -72,3 +72,20 @@ export function paceLevel(
   const level: PaceLevel = ratio <= STEP_1 ? 1 : ratio <= STEP_2 ? 2 : 3;
   return { level, overBy };
 }
+
+// How much of the budget is gone where "what is left" changes colour: green
+// while there is plenty, then yellow, then orange as it runs out, red when over.
+const LOW_1 = 70;
+const LOW_2 = 85;
+
+/**
+ * The colour level of the "remaining" figure. Judged on how much of the budget
+ * is used, not on the days left: this answers "is there much left?", the
+ * forecast and the daily allowance answer "will it last?".
+ */
+export function remainingLevel(progress: BudgetProgress): PaceLevel {
+  if (progress.over) return 3;
+  if (progress.pct < LOW_1) return 0;
+  if (progress.pct < LOW_2) return 1;
+  return 2;
+}

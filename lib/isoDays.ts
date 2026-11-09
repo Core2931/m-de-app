@@ -16,3 +16,10 @@ export function addDays(iso: string, days: number): string {
 export function daysBetween(from: string, to: string): number {
   return Math.round((toDate(to).getTime() - toDate(from).getTime()) / 86_400_000);
 }
+
+/** True only for a YYYY-MM-DD string naming a real calendar day. */
+export function isISODate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = toDate(value);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}

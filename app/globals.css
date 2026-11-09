@@ -38,6 +38,18 @@
   --font-sans: var(--font-ibm-plex-thai), "IBM Plex Sans", system-ui, sans-serif;
 }
 
+/* Grows a control's tap area without changing how it looks: an invisible
+   box sticking out past it. --hit-y / --hit-x are how far on each axis.
+   Absolutely positioned inside the control, so it needs no layout room. */
+@utility hit-area {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: calc(var(--hit-y, 6px) * -1) calc(var(--hit-x, 2px) * -1);
+  }
+}
+
 /* Light theme (default) */
 :root {
   --bg: #f8fafc;

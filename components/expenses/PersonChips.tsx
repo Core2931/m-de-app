@@ -17,7 +17,7 @@ const PAIR_CAP = 3;
 const WAYS = [2, 3, 4];
 
 const CHIP =
-  "rounded-full border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
+  "hit-area rounded-full border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
 
 export interface RemarkSelection {
   start: number;
@@ -80,7 +80,7 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
   }
 
   const toggle = (active: boolean, tone: "accent" | "expense") =>
-    "rounded-full border px-2.5 py-1 text-[12px] transition-transform active:scale-95 " +
+    "hit-area rounded-full border px-2.5 py-1.5 text-[12px] transition-transform active:scale-95 " +
     (active
       ? tone === "accent"
         ? "border-accent font-semibold text-accent"
@@ -89,7 +89,7 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="text-[12px] text-sub">ใครจ่าย:</span>
         <button
           type="button"
@@ -110,7 +110,7 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
       </div>
 
       {canSplit && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] text-sub">หารเท่ากัน:</span>
           {previews.map(({ ways, split }) => (
             <button
@@ -132,7 +132,7 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
       )}
 
       {known.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] text-sub">หาร 2 กับ:</span>
           {known.slice(0, PAIR_CAP).map((person) => (
             <button
@@ -149,7 +149,7 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
       )}
 
       {known.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[12px] text-sub">เพิ่มคน:</span>
           {known.slice(0, CHIP_CAP).map((person) => (
             <button

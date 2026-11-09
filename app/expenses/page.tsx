@@ -13,6 +13,7 @@ import PeriodSummary from "@/components/expenses/PeriodSummary";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
 import { formatCurrency, formatDate, todayISO } from "@/lib/formatters";
 import { cycleFor } from "@/lib/payCycle";
+import { isISODate } from "@/lib/isoDays";
 import { summarizeExpense } from "@/lib/splits";
 import { summarizePeriod } from "@/lib/periodSplits";
 import { buildScopeLabel } from "@/lib/scopeLabel";
@@ -37,8 +38,18 @@ export default function ExpensesPage() {
   // Running client-only costs nothing visually — the store is still empty on
   // first paint, so the list never flashes unfiltered. Empty deps on purpose:
   // this seeds once, and clearing the field afterwards must stay cleared.
+  //
+  // A "?date=YYYY-MM-DD" (the home calendar links here) narrows it to that one
+  // day instead. Read from window, not useSearchParams, which would need a
+  // Suspense boundary around a page that is deliberately static.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    const date = new URLSearchParams(window.location.search).get("date");
+    if (date && isISODate(date)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFrom(date);
+      setTo(date);
+      return;
+    }
     setFrom(cycleFor(todayISO()).start);
   }, []);
 
@@ -74,7 +85,7 @@ export default function ExpensesPage() {
 
   return (
     <Screen>
-      <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการรายจ่าย</h1>
+      <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการจ่าย</h1>
 
       <div className="mb-2 grid grid-cols-2 gap-3">
         <DateField label="จากวันที่" value={from} onChange={setFrom} filled align="left" />

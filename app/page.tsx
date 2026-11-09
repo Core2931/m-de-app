@@ -7,7 +7,7 @@ import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import Screen from "@/components/layout/Screen";
 import CycleCalendar from "@/components/home/CycleCalendar";
-import BudgetCard from "@/components/home/BudgetCard";
+import HomeHero from "@/components/home/HomeHero";
 import {
   useExpenseStore,
   selectTotalForDate,
@@ -18,8 +18,9 @@ import { useBudgetStore } from "@/store/budgetStore";
 import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
 import { computeBudgetProgress, findBudgetForMonth } from "@/lib/budgets";
 import { todayPace } from "@/lib/pace";
-import { forecastBudget } from "@/lib/forecast";
-import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
+import { dailyAverage, forecastBudget } from "@/lib/forecast";
+import { cashSpent } from "@/lib/cash";
+import { formatCurrency, todayISO } from "@/lib/formatters";
 import { cycleFor, daysLeftInCycle, missingHolidayYear } from "@/lib/payCycle";
 import { myShareByDate, myShareForRange, totalForRange } from "@/lib/rangeTotals";
 import { buildCycleCalendar } from "@/lib/cycleCalendar";
@@ -112,9 +113,14 @@ export default function DashboardPage() {
       })
     : null;
 
+  // What really left the pocket; only once settlements are in, so repayments
+  // that already happened are not missing from it.
+  const cashOut = settlementsLoaded
+    ? cashSpent({ expenses, settlements, from: cycle.start, to: cycle.end })
+    : null;
+
   // Colours today's number by how far past the start-of-day allowance it is.
   const pace = todayPace(budgetProgress, todayMyShare, daysLeft);
-  const PACE_TEXT = ["text-text", "text-pace-1", "text-pace-2", "text-danger"] as const;
 
   // Gated on both stores. A bar rendered before the data lands shows 0% spent,
   // which reads as "nothing spent this cycle" — the same lie three earlier
@@ -137,58 +143,32 @@ export default function DashboardPage() {
     <Screen onLogout={handleLogout}>
       <h1 className="mb-5 text-[30px] font-bold leading-tight text-text">รายจ่าย</h1>
 
-      <div className="mb-4 grid grid-cols-2 gap-3">
-        <Card className="rounded-[20px] p-[18px_20px]">
-          <p className="mb-2 text-[13px] font-medium text-sub">วันนี้</p>
-          <p className={`text-[26px] font-bold ${PACE_TEXT[pace?.level ?? 0]}`}>
-            {formatCurrency(todayTotal)}
-          </p>
-          {todayMyShare !== todayTotal && (
-            <p className="mt-1 text-[12px] text-sub">ของฉัน {formatCurrency(todayMyShare)}</p>
-          )}
-          {/* Words as well as colour, so the level is not carried by hue alone. */}
-          {pace && (
-            <p
-              className={`mt-1 text-[12px] ${
-                pace.level > 0 ? `font-medium ${PACE_TEXT[pace.level]}` : "text-sub"
-              }`}
-            >
-              {pace.level > 0
-                ? `เกิน ${formatCurrency(pace.overBy)} · วันละ ${formatCurrency(pace.allowance)}`
-                : `ใช้ได้วันละ ${formatCurrency(pace.allowance)}`}
-            </p>
-          )}
-        </Card>
-        <Card className="rounded-[20px] p-[18px_20px]">
-          <p className="mb-2 text-[13px] font-medium text-sub">รอบนี้</p>
-          <p className="text-[26px] font-bold text-expense">{formatCurrency(cycleTotal)}</p>
-          {/* Gated on isLoaded: this page is prerendered at build time, and
-              text derived from "today" would be the build day's until the
-              client takes over. The store only ever loads in the browser. */}
-          {isLoaded && (
-            <>
-              <p className="mt-1 text-[12px] text-sub">
-                {formatDateShort(cycle.start)} – {formatDateShort(cycle.end)}
-              </p>
-              <p className="text-[12px] text-sub">อีก {daysLeft} วันเงินออก</p>
-            </>
-          )}
-        </Card>
-      </div>
-
       {isLoaded && missingYear !== null && (
         <p className="mb-4 text-[12px] text-expense">
           ยังไม่มีรายการวันหยุดปี {missingYear + 543} — วันเงินออกอาจคลาดเคลื่อน
         </p>
       )}
 
-      {showBudget && (
-        <BudgetCard
+      {/* Gated like the calendar: it is built from "today", which the
+          prerendered HTML does not know, and a bar drawn before the budget
+          lands would read as nothing spent. The spacer holds the room. */}
+      {showBudget ? (
+        <HomeHero
           progress={budgetProgress}
           cycleTotal={cycleTotal}
+          todayTotal={todayTotal}
+          todayMyShare={todayMyShare}
+          pace={pace}
+          average={dailyAverage(cycleMyShare, cycle.start, today)}
           forecast={forecast}
+          cashSpent={cashOut}
+          daysLeft={daysLeft}
+          cycleStart={cycle.start}
+          cycleEnd={cycle.end}
           onSave={(amount) => saveBudget(cycle.budgetMonth, amount)}
         />
+      ) : (
+        <div className="mb-4 h-[300px]" />
       )}
 
       {hasOutstanding && (
