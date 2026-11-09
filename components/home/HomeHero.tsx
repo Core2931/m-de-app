@@ -216,17 +216,17 @@ export default function HomeHero({
         <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-border">
           <div className="h-full rounded-full" style={barStyle} />
         </div>
-        <div className="mt-2 flex items-start justify-between text-[13px] text-sub tabular-nums">
+        <div className="mt-2 flex items-baseline justify-between text-[13px] text-sub tabular-nums">
           {/* "ใช้ไป" is our own share; money fronted for others is not back yet,
               so what really left the pocket can be higher. Shown only when the
-              two differ, in brackets after the figure it qualifies. It may wrap
-              onto a second line on a narrow screen; the percentage never does. */}
-          <p className="min-w-0">
-            ใช้ไป {formatCurrency(progress.spent)}
+              two differ, as a plain second line under the figure it qualifies:
+              the share is the headline, the cash figure a note beneath it. */}
+          <div className="min-w-0">
+            <p className="text-[16px] font-medium text-text">ใช้ไป {formatCurrency(progress.spent)}</p>
             {cashSpent !== null && Math.round((cashSpent - progress.spent) * 100) !== 0 && (
-              <> (จ่ายจริง {formatCurrency(cashSpent)})</>
+              <p className="mt-0.5">จ่ายจริง {formatCurrency(cashSpent)}</p>
             )}
-          </p>
+          </div>
           <span className="shrink-0 whitespace-nowrap pl-2">
             {Math.round(progress.pct)}% ของ {formatCurrency(progress.budget)}
           </span>
