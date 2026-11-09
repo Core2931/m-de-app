@@ -219,14 +219,15 @@ export default function HomeHero({
         <div className="mt-2 flex items-start justify-between text-[13px] text-sub tabular-nums">
           {/* "ใช้ไป" is our own share; money fronted for others is not back yet,
               so what really left the pocket can be higher. Shown only when the
-              two differ, as a second line under the figure it qualifies. */}
-          <div>
-            <p>ใช้ไป {formatCurrency(progress.spent)}</p>
+              two differ, in brackets after the figure it qualifies. It may wrap
+              onto a second line on a narrow screen; the percentage never does. */}
+          <p className="min-w-0">
+            ใช้ไป {formatCurrency(progress.spent)}
             {cashSpent !== null && Math.round((cashSpent - progress.spent) * 100) !== 0 && (
-              <p className="mt-0.5">จ่ายจริง {formatCurrency(cashSpent)}</p>
+              <> (จ่ายจริง {formatCurrency(cashSpent)})</>
             )}
-          </div>
-          <span>
+          </p>
+          <span className="shrink-0 whitespace-nowrap pl-2">
             {Math.round(progress.pct)}% ของ {formatCurrency(progress.budget)}
           </span>
         </div>
