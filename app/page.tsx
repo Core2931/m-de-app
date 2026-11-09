@@ -19,6 +19,7 @@ import { buildPersonBalances, summarizeBalances } from "@/lib/balances";
 import { computeBudgetProgress, findBudgetForMonth } from "@/lib/budgets";
 import { todayPace } from "@/lib/pace";
 import { dailyAverage, forecastBudget } from "@/lib/forecast";
+import { cashPosition } from "@/lib/cash";
 import { formatCurrency, todayISO } from "@/lib/formatters";
 import { cycleFor, daysLeftInCycle, missingHolidayYear } from "@/lib/payCycle";
 import { myShareByDate, myShareForRange, totalForRange } from "@/lib/rangeTotals";
@@ -112,6 +113,20 @@ export default function DashboardPage() {
       })
     : null;
 
+  // The account-side view; only once settlements are in, so repayments that
+  // already happened are not missing from it.
+  const cash =
+    budgetProgress && settlementsLoaded
+      ? cashPosition({
+          expenses,
+          settlements,
+          budget: budgetProgress.budget,
+          remaining: budgetProgress.remaining,
+          from: cycle.start,
+          to: cycle.end,
+        })
+      : null;
+
   // Colours today's number by how far past the start-of-day allowance it is.
   const pace = todayPace(budgetProgress, todayMyShare, daysLeft);
 
@@ -154,6 +169,7 @@ export default function DashboardPage() {
           pace={pace}
           average={dailyAverage(cycleMyShare, cycle.start, today)}
           forecast={forecast}
+          cash={cash}
           daysLeft={daysLeft}
           cycleStart={cycle.start}
           cycleEnd={cycle.end}

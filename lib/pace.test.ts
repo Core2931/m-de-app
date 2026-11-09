@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeBudgetProgress } from "@/lib/budgets";
-import { todayPace } from "@/lib/pace";
+import { remainingLevel, todayPace } from "@/lib/pace";
 
 // Budget 3,000 over 10 days left. Spent is the cycle total INCLUDING today.
 function progress(spent: number, budget = 3000) {
@@ -52,5 +52,25 @@ describe("todayPace", () => {
 
   it("เหลือวันเดียว ได้ทั้งก้อน", () => {
     expect(todayPace(progress(2500), 100, 1)?.allowance).toBe(600);
+  });
+});
+
+describe("remainingLevel", () => {
+  const level = (spent: number) => remainingLevel(computeBudgetProgress(spent, 1000)!);
+
+  it("green while there is plenty left", () => {
+    expect(level(0)).toBe(0);
+    expect(level(699)).toBe(0);
+  });
+
+  it("yellow from 70% used, orange from 85%", () => {
+    expect(level(700)).toBe(1);
+    expect(level(849)).toBe(1);
+    expect(level(850)).toBe(2);
+  });
+
+  it("exactly the whole budget is orange, past it red", () => {
+    expect(level(1000)).toBe(2);
+    expect(level(1001)).toBe(3);
   });
 });

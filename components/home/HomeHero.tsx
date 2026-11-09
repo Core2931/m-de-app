@@ -7,10 +7,13 @@ import Button from "@/components/ui/Button";
 import { formatCurrency, formatDateShort } from "@/lib/formatters";
 import type { BudgetProgress } from "@/lib/budgets";
 import type { BudgetForecast } from "@/lib/forecast";
-import type { TodayPace } from "@/lib/pace";
+import { remainingLevel, type TodayPace } from "@/lib/pace";
+import type { CashPosition } from "@/lib/cash";
 
 // Same colours as the calendar cells: one meaning everywhere.
 const LEVEL_TEXT = ["text-text", "text-pace-1", "text-pace-2", "text-danger"] as const;
+// What is left starts green, not white: plenty left is good news.
+const REMAINING_TEXT = ["text-accent", "text-pace-1", "text-pace-2", "text-danger"] as const;
 
 interface HomeHeroProps {
   progress: BudgetProgress | null;
@@ -23,6 +26,8 @@ interface HomeHeroProps {
   /** Spent per elapsed day, or null before anything is spent. */
   average: number | null;
   forecast: BudgetForecast | null;
+  /** The account-side view, or null while settlements have not loaded. */
+  cash: CashPosition | null;
   daysLeft: number;
   cycleStart: string;
   cycleEnd: string;
@@ -38,6 +43,7 @@ export default function HomeHero({
   pace,
   average,
   forecast,
+  cash,
   daysLeft,
   cycleStart,
   cycleEnd,
@@ -200,11 +206,27 @@ export default function HomeHero({
         </div>
         <p
           className={`mt-1 text-[34px] font-bold leading-tight tabular-nums ${
-            progress.over ? "text-danger" : "text-accent"
+            REMAINING_TEXT[remainingLevel(progress)]
           }`}
         >
           {formatCurrency(progress.over ? -progress.remaining : progress.remaining)}
         </p>
+        {/* Money fronted for others is not back yet, so the account holds less
+            (or, when we owe someone, more) than the budget says. Said right
+            under the number it corrects, and only when the two differ. */}
+        {cash && Math.round(cash.gap) !== 0 && (
+          <div className="mt-1">
+            <p className="text-[14px] font-medium text-text">
+              ในบัญชีเหลือราว {formatCurrency(cash.cashRemaining)}
+            </p>
+            <p className="text-[12px] text-sub">
+              จ่ายจริง {formatCurrency(cash.cashOut)} ·{" "}
+              {cash.gap > 0
+                ? `รอได้คืน ${formatCurrency(cash.gap)}`
+                : `ต้องจ่ายคืน ${formatCurrency(-cash.gap)}`}
+            </p>
+          </div>
+        )}
 
         {/* Width is data, so it is an inline style: Tailwind cannot generate a
             runtime w-[...] class. Clamped here while pct below stays honest. */}
