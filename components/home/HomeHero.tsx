@@ -8,7 +8,6 @@ import { formatCurrency, formatDateShort } from "@/lib/formatters";
 import type { BudgetProgress } from "@/lib/budgets";
 import type { BudgetForecast } from "@/lib/forecast";
 import { remainingLevel, type TodayPace } from "@/lib/pace";
-import type { CashPosition } from "@/lib/cash";
 
 // Same colours as the calendar cells: one meaning everywhere.
 const LEVEL_TEXT = ["text-text", "text-pace-1", "text-pace-2", "text-danger"] as const;
@@ -26,8 +25,8 @@ interface HomeHeroProps {
   /** Spent per elapsed day, or null before anything is spent. */
   average: number | null;
   forecast: BudgetForecast | null;
-  /** The account-side view, or null while settlements have not loaded. */
-  cash: CashPosition | null;
+  /** What really left the pocket this cycle, or null while settlements have not loaded. */
+  cashSpent: number | null;
   daysLeft: number;
   cycleStart: string;
   cycleEnd: string;
@@ -43,7 +42,7 @@ export default function HomeHero({
   pace,
   average,
   forecast,
-  cash,
+  cashSpent,
   daysLeft,
   cycleStart,
   cycleEnd,
@@ -211,30 +210,22 @@ export default function HomeHero({
         >
           {formatCurrency(progress.over ? -progress.remaining : progress.remaining)}
         </p>
-        {/* Money fronted for others is not back yet, so the account holds less
-            (or, when we owe someone, more) than the budget says. Said right
-            under the number it corrects, and only when the two differ. */}
-        {cash && Math.round(cash.gap) !== 0 && (
-          <div className="mt-1">
-            <p className="text-[14px] font-medium text-text">
-              ในบัญชีเหลือราว {formatCurrency(cash.cashRemaining)}
-            </p>
-            <p className="text-[12px] text-sub">
-              จ่ายจริง {formatCurrency(cash.cashOut)} ·{" "}
-              {cash.gap > 0
-                ? `รอได้คืน ${formatCurrency(cash.gap)}`
-                : `ต้องจ่ายคืน ${formatCurrency(-cash.gap)}`}
-            </p>
-          </div>
-        )}
 
         {/* Width is data, so it is an inline style: Tailwind cannot generate a
             runtime w-[...] class. Clamped here while pct below stays honest. */}
         <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-border">
           <div className="h-full rounded-full" style={barStyle} />
         </div>
-        <div className="mt-2 flex items-baseline justify-between text-[13px] text-sub tabular-nums">
-          <span>ใช้ไป {formatCurrency(progress.spent)}</span>
+        <div className="mt-2 flex items-start justify-between text-[13px] text-sub tabular-nums">
+          {/* "ใช้ไป" is our own share; money fronted for others is not back yet,
+              so what really left the pocket can be higher. Shown only when the
+              two differ, as a second line under the figure it qualifies. */}
+          <div>
+            <p>ใช้ไป {formatCurrency(progress.spent)}</p>
+            {cashSpent !== null && Math.round((cashSpent - progress.spent) * 100) !== 0 && (
+              <p className="mt-0.5">จ่ายจริง {formatCurrency(cashSpent)}</p>
+            )}
+          </div>
           <span>
             {Math.round(progress.pct)}% ของ {formatCurrency(progress.budget)}
           </span>
