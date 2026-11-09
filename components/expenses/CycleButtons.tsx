@@ -10,7 +10,7 @@ interface CycleButtonsProps {
 }
 
 const CHIP =
-  "rounded-full border border-border bg-card px-3 py-1 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
+  "hit-area rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
 
 /**
  * Shortcuts for the date range: step back a salary cycle at a time, or jump
@@ -31,7 +31,7 @@ export default function CycleButtons({ from, onPick }: CycleButtonsProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       <button type="button" onClick={showPrevious} className={CHIP}>
         ‹ รอบก่อน
       </button>

@@ -19,14 +19,14 @@ export default function QuickItems({ items, onPick }: QuickItemsProps) {
   if (items.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-2">
       <span className="text-[12px] text-sub">รายการประจำ:</span>
       {items.slice(0, CHIP_CAP).map((entry) => (
         <button
           key={entry.item}
           type="button"
           onClick={() => onPick(entry)}
-          className="rounded-full border border-border bg-card px-2.5 py-1 text-[12px] font-medium text-text/80 transition-transform active:scale-95"
+          className="hit-area rounded-full border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95"
         >
           {entry.item}
           <span className="ml-1 text-sub">{formatCurrency(entry.amount)}</span>

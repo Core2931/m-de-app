@@ -28,7 +28,7 @@ export default function ThemeToggle() {
       role="switch"
       aria-checked={dark}
       aria-label="สลับโหมดสว่าง/มืด"
-      className="relative h-[26px] w-12 shrink-0 rounded-[13px] bg-ember-soft"
+      className="hit-area relative h-[26px] w-12 shrink-0 rounded-[13px] bg-ember-soft [--hit-x:6px] [--hit-y:9px]"
     >
       <span
         className="absolute top-[2px] left-[2px] h-[22px] w-[22px] rounded-full bg-ember transition-transform duration-200"
