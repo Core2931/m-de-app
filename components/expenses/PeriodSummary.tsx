@@ -5,6 +5,7 @@ import Card from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDateShort } from "@/lib/formatters";
 import { CATEGORY_COLOR_VAR, CATEGORY_LABEL } from "@/lib/categories";
+import type { CategoryTrend } from "@/lib/categoryTrend";
 import type {
   CategoryTotal,
   PeriodSummary as PeriodSummaryData,
@@ -41,7 +42,34 @@ function Row({
   );
 }
 
-function CategoryRow({ entry, total }: { entry: CategoryTotal; total: number }) {
+// Below this a change is noise, not news.
+const TREND_MIN_PCT = 10;
+
+function TrendNote({ trend, total }: { trend: CategoryTrend; total: number }) {
+  if (trend.pct === null) {
+    return total > 0 ? <span className="text-[12px] text-sub">ใหม่</span> : null;
+  }
+  if (Math.abs(trend.pct) < TREND_MIN_PCT) return null;
+  const up = trend.pct > 0;
+  return (
+    <span
+      className={cn("text-[12px] font-medium tabular-nums", up ? "text-expense" : "text-accent")}
+    >
+      {up ? "↑" : "↓"}
+      {Math.round(Math.abs(trend.pct))}%
+    </span>
+  );
+}
+
+function CategoryRow({
+  entry,
+  total,
+  trend,
+}: {
+  entry: CategoryTotal;
+  total: number;
+  trend?: CategoryTrend;
+}) {
   // Guard the divide: an all-zero slice would otherwise put "NaN%" in the DOM.
   const pct = total > 0 ? (entry.total / total) * 100 : 0;
   const color = CATEGORY_COLOR_VAR[entry.category];
@@ -56,6 +84,7 @@ function CategoryRow({ entry, total }: { entry: CategoryTotal; total: number }) 
         <span className="flex-1 truncate text-[14px] text-text">
           {CATEGORY_LABEL[entry.category]}
         </span>
+        {trend && <TrendNote trend={trend} total={entry.total} />}
         <span className="text-[14px] font-semibold tabular-nums text-text">
           {formatCurrency(entry.total)}
         </span>
@@ -143,16 +172,52 @@ interface PeriodSummaryProps {
   /** What the numbers cover, e.g. "ช่วงที่เลือก · อาหาร". Keeps a filtered
    *  total from being misread as the all-time one. */
   scopeLabel: string;
+  /** How many expenses these figures cover. */
+  count: number;
+  /** Each category against the cycle before, or null when the range is not a cycle. */
+  trends: Map<string, CategoryTrend> | null;
 }
 
-export default function PeriodSummary({ summary, scopeLabel }: PeriodSummaryProps) {
+export default function PeriodSummary({ summary, scopeLabel, count, trends }: PeriodSummaryProps) {
   const hasSplits = summary.people.length > 0;
+  // Closed by default: the list is what this screen is for, and the full
+  // breakdown is two taps' worth of reading that used to sit on top of it.
+  const [open, setOpen] = useState(false);
 
   return (
-    <Card className="mb-4 rounded-[22px] p-[18px_20px]">
-      <p className="mb-1 text-[12px] font-medium text-sub">{scopeLabel}</p>
+    <Card className="mb-4 rounded-[22px] p-[16px_20px]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full text-left"
+      >
+        <div className="flex items-baseline justify-between">
+          <p className="text-[12px] font-medium text-sub">{scopeLabel}</p>
+          <span
+            className={cn("text-[11px] text-sub transition-transform", open && "rotate-180")}
+            aria-hidden="true"
+          >
+            ▾
+          </span>
+        </div>
+        <p className="mt-1 text-[13px] text-sub">
+          <span className="text-[18px] font-bold tabular-nums text-text">
+            {formatCurrency(summary.total)}
+          </span>
+          {summary.lentOut > 0 && <> · ของฉัน {formatCurrency(summary.myShare)}</>}
+          {" · "}
+          {count} รายการ
+        </p>
+      </button>
 
-      <Row label="รวมทั้งหมด" value={summary.total} strong />
+      {open && <div className="mt-2 border-t border-border pt-2">{detail()}</div>}
+    </Card>
+  );
+
+  function detail() {
+    return (
+      <>
       {summary.lentOut > 0 && <Row label="ออกให้คนอื่น" value={summary.lentOut} tone="accent" />}
       {summary.borrowed > 0 && (
         <Row label="คนอื่นออกให้เรา" value={summary.borrowed} tone="expense" />
@@ -165,9 +230,16 @@ export default function PeriodSummary({ summary, scopeLabel }: PeriodSummaryProp
 
       {summary.byCategory.length > 1 && (
         <div className="mt-3 border-t border-border pt-2">
-          <p className="mb-1 text-[12px] font-medium text-sub">แยกตามหมวด</p>
+          <p className="mb-1 text-[12px] font-medium text-sub">
+            แยกตามหมวด{trends ? " · เทียบรอบก่อน (ช่วงวันเดียวกัน)" : ""}
+          </p>
           {summary.byCategory.map((entry) => (
-            <CategoryRow key={entry.category} entry={entry} total={summary.total} />
+            <CategoryRow
+              key={entry.category}
+              entry={entry}
+              total={summary.total}
+              trend={trends?.get(entry.category)}
+            />
           ))}
         </div>
       )}
@@ -182,6 +254,7 @@ export default function PeriodSummary({ summary, scopeLabel }: PeriodSummaryProp
           ))}
         </div>
       )}
-    </Card>
-  );
+      </>
+    );
+  }
 }

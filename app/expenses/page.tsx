@@ -1,31 +1,52 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
-import Avatar from "@/components/ui/Avatar";
 import DateField from "@/components/ui/DateField";
 import Screen from "@/components/layout/Screen";
 import CategoryFilter from "@/components/expenses/CategoryFilter";
 import CycleButtons from "@/components/expenses/CycleButtons";
+import ExpenseRow from "@/components/expenses/ExpenseRow";
 import PeriodSummary from "@/components/expenses/PeriodSummary";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
-import { formatCurrency, formatDate, todayISO } from "@/lib/formatters";
+import { useBudgetStore } from "@/store/budgetStore";
+import { useSettlementStore } from "@/store/settlementStore";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatDate, formatDateShort, todayISO } from "@/lib/formatters";
 import { cycleFor } from "@/lib/payCycle";
 import { isISODate } from "@/lib/isoDays";
 import { summarizeExpense } from "@/lib/splits";
 import { summarizePeriod } from "@/lib/periodSplits";
 import { buildScopeLabel } from "@/lib/scopeLabel";
 import { matchesQuery, parseQuery } from "@/lib/search";
+import { categoryTrends } from "@/lib/categoryTrend";
+import { dayPaceMap } from "@/lib/dayPace";
+import { outstandingByExpense } from "@/lib/outstanding";
 import { type Category } from "@/lib/categories";
+
+// Same colours as today's number on Home and the calendar: one meaning everywhere.
+const LEVEL_TEXT = ["text-sub", "text-pace-1", "text-pace-2", "text-danger"] as const;
+
+type SortMode = "date" | "amount";
+
+const CHIP =
+  "hit-area rounded-full border px-3 py-1.5 text-[13px] font-medium transition-transform active:scale-95";
 
 export default function ExpensesPage() {
   const { expenses, isLoaded, isLoading, error, load } = useExpenseStore();
+  const { budgets, isLoaded: budgetsLoaded, load: loadBudgets } = useBudgetStore();
+  const {
+    settlements,
+    isLoaded: settlementsLoaded,
+    load: loadSettlements,
+  } = useSettlementStore();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
+  const [onlyOutstanding, setOnlyOutstanding] = useState(false);
+  const [sort, setSort] = useState<SortMode>("date");
   // Every keystroke re-runs summarizePeriod over the survivors, which parses
   // each remark with three regexes. Deferring keeps the field itself typing at
   // full speed while the list catches up.
@@ -54,16 +75,31 @@ export default function ExpensesPage() {
   }, []);
 
   // Always loads every expense, never just the visible range: /people derives
-  // balances and Home derives the week chart from this same store, and whoever
+  // balances and Home derives the calendar from this same store, and whoever
   // mounts first wins the `!isLoaded` race. Narrowing the fetch here would
   // silently reduce those screens to one month of history.
   useEffect(() => {
     if (!isLoaded) load();
   }, [isLoaded, load]);
 
+  // Budgets colour the day headings and settlements mark what is still open;
+  // both are optional, so the list renders without them and fills in later.
+  useEffect(() => {
+    if (!budgetsLoaded) loadBudgets();
+  }, [budgetsLoaded, loadBudgets]);
+
+  useEffect(() => {
+    if (!settlementsLoaded) loadSettlements();
+  }, [settlementsLoaded, loadSettlements]);
+
   const terms = useMemo(() => parseQuery(deferredQuery), [deferredQuery]);
 
-  const filtered = useMemo(() => {
+  const outstanding = useMemo(
+    () => (settlementsLoaded ? outstandingByExpense(expenses, settlements) : new Map()),
+    [expenses, settlements, settlementsLoaded]
+  );
+
+  const matching = useMemo(() => {
     return expenses.filter((e) => {
       if (from && e.date < from) return false;
       if (to && e.date > to) return false;
@@ -76,12 +112,52 @@ export default function ExpensesPage() {
     });
   }, [expenses, from, to, categories, terms]);
 
+  const outstandingCount = useMemo(
+    () => matching.filter((e) => outstanding.has(e.id)).length,
+    [matching, outstanding]
+  );
+
+  const filtered = useMemo(
+    () => (onlyOutstanding ? matching.filter((e) => outstanding.has(e.id)) : matching),
+    [matching, onlyOutstanding, outstanding]
+  );
+
   const dailyTotals = useMemo(() => selectDailyTotals(filtered), [filtered]);
+  const byAmount = useMemo(
+    () => (sort === "amount" ? [...filtered].sort((a, b) => b.amount - a.amount) : []),
+    [filtered, sort]
+  );
   const period = useMemo(() => summarizePeriod(filtered), [filtered]);
   const scopeLabel = useMemo(
     () => buildScopeLabel({ from, to, categories, query: deferredQuery }),
     [from, to, categories, deferredQuery]
   );
+
+  // A day is judged against its cycle's budget using EVERYTHING spent that
+  // day. With a filter on, the heading shows only part of the day, so a colour
+  // earned by the whole day would sit next to the wrong number: no colour then.
+  const judgeDays =
+    budgetsLoaded && categories.length === 0 && !deferredQuery.trim() && !onlyOutstanding;
+  const paceByDay = useMemo(
+    () =>
+      judgeDays
+        ? dayPaceMap({ expenses, budgets, dates: dailyTotals.map((d) => d.date) })
+        : null,
+    [judgeDays, expenses, budgets, dailyTotals]
+  );
+
+  // Needs the cycle's own range and no text search: a search narrows the
+  // current figures but not the earlier cycle's, which would compare unlike.
+  const trends = useMemo(() => {
+    if (!isLoaded || deferredQuery.trim() || onlyOutstanding) return null;
+    return categoryTrends({
+      expenses,
+      from,
+      to,
+      today: todayISO(),
+      current: new Map(period.byCategory.map((c) => [c.category, c.total])),
+    });
+  }, [isLoaded, expenses, from, to, period, deferredQuery, onlyOutstanding]);
 
   return (
     <Screen>
@@ -113,61 +189,125 @@ export default function ExpensesPage() {
         />
       </div>
 
-      <div className="mb-4">
+      <div className="mb-3">
         <CategoryFilter selected={categories} onChange={setCategories} />
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        {/* Hidden while nothing is open, unless it is on: a filter that is on
+            and has nothing to show must still be possible to turn off. */}
+        {outstandingCount > 0 || onlyOutstanding ? (
+          <button
+            type="button"
+            onClick={() => setOnlyOutstanding((v) => !v)}
+            aria-pressed={onlyOutstanding}
+            className={cn(
+              CHIP,
+              onlyOutstanding
+                ? "border-accent bg-accent-soft text-accent"
+                : "border-border bg-card text-sub"
+            )}
+          >
+            ค้างอยู่ {outstandingCount}
+          </button>
+        ) : (
+          <span />
+        )}
+
+        <div
+          role="group"
+          aria-label="เรียงรายการ"
+          className="flex overflow-hidden rounded-full border border-border bg-card text-[13px] font-medium"
+        >
+          {(
+            [
+              ["date", "ตามวัน"],
+              ["amount", "ยอดมาก"],
+            ] as const
+          ).map(([mode, label]) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setSort(mode)}
+              aria-pressed={sort === mode}
+              className={cn(
+                "px-3 py-1.5",
+                sort === mode ? "bg-accent-soft font-semibold text-accent" : "text-sub"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Gated on isLoaded, not just on filtered.length — before load() resolves
           the store is empty, and a ฿0 summary reads as a real answer. */}
       {isLoaded && filtered.length > 0 && (
-        <PeriodSummary summary={period} scopeLabel={scopeLabel} />
+        <PeriodSummary
+          summary={period}
+          scopeLabel={scopeLabel}
+          count={filtered.length}
+          trends={trends}
+        />
       )}
 
       {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
-      {!isLoading && !error && dailyTotals.length === 0 && (
+      {!isLoading && !error && filtered.length === 0 && (
         <p className="text-center text-sm text-sub">ไม่มีรายการ</p>
       )}
 
-      <div className="flex flex-col gap-4">
-        {dailyTotals.map((day) => (
-          <div key={day.date}>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[13px] font-medium text-sub">{formatDate(day.date)}</span>
-              <span className="text-[13px] font-semibold text-sub">
-                {formatCurrency(day.total)}
-              </span>
-            </div>
-            <Card className="rounded-[20px] px-5 py-1">
-              {day.items.map((item) => {
-                const summary = summarizeExpense(item);
-                const hasSplit = summary.splits.length > 0;
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/expenses/${item.id}`}
-                    className="flex items-center gap-3 py-3 transition-transform active:scale-[0.98]"
+      {sort === "amount" ? (
+        filtered.length > 0 && (
+          <Card className="rounded-[20px] px-5 py-1">
+            {byAmount.map((item) => (
+              <ExpenseRow
+                key={item.id}
+                expense={item}
+                outstanding={outstanding.get(item.id)}
+                note={formatDateShort(item.date)}
+              />
+            ))}
+          </Card>
+        )
+      ) : (
+        <div className="flex flex-col gap-4">
+          {dailyTotals.map((day) => {
+            const mine = day.items.reduce((sum, item) => sum + summarizeExpense(item).myShare, 0);
+            const pace = paceByDay?.get(day.date);
+            const level = pace?.level ?? 0;
+            const overBy =
+              pace && pace.allowance !== null && level > 0 ? pace.spent - pace.allowance : 0;
+            const differs = Math.round((mine - day.total) * 100) !== 0;
+            return (
+              <div key={day.date}>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[13px] font-medium text-sub">{formatDate(day.date)}</span>
+                  <span
+                    className={cn("text-[13px] font-semibold tabular-nums", LEVEL_TEXT[level])}
                   >
-                    <Avatar category={item.category} size={34} />
-                    <span className="flex-1 truncate text-[15px] font-medium text-text">
-                      {item.item}
-                    </span>
-                    {summary.invalid && <span className="text-[13px] text-expense">⚠</span>}
-                    {hasSplit && (
-                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
-                        ของฉัน {formatCurrency(summary.myShare)}
+                    {/* Words as well as colour, so the level is not carried by
+                        hue alone. */}
+                    {overBy > 0 && <>เกิน {formatCurrency(overBy)} · </>}
+                    {differs && (
+                      <span className="font-medium text-sub">
+                        {formatCurrency(day.total)} · ของฉัน{" "}
                       </span>
                     )}
-                    <span className="text-[15px] font-semibold text-expense">
-                      {formatCurrency(item.amount)}
-                    </span>
-                  </Link>
-                );
-              })}
-            </Card>
-          </div>
-        ))}
-      </div>
+                    {formatCurrency(mine)}
+                  </span>
+                </div>
+                <Card className="rounded-[20px] px-5 py-1">
+                  {day.items.map((item) => (
+                    <ExpenseRow key={item.id} expense={item} outstanding={outstanding.get(item.id)} />
+                  ))}
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </Screen>
   );
 }
