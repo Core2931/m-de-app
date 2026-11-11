@@ -282,15 +282,15 @@ export default function ExpensesPage() {
               <div key={day.date}>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-[13px] font-medium text-sub">{formatDate(day.date)}</span>
-                  <span
-                    className={cn("text-[13px] font-semibold tabular-nums", LEVEL_TEXT[level])}
-                  >
+                  <span className="text-[13px] font-semibold tabular-nums">
+                    {/* "ของฉัน" is always said: the colour is judged on our own
+                        share, and a bare number that turns red reads as if it
+                        were the bill. */}
                     {differs && (
-                      <span className="font-medium text-sub">
-                        {formatCurrency(day.total)} · ของฉัน{" "}
-                      </span>
+                      <span className="font-medium text-sub">{formatCurrency(day.total)} · </span>
                     )}
-                    {formatCurrency(mine)}
+                    <span className="font-medium text-sub">ของฉัน </span>
+                    <span className={LEVEL_TEXT[level]}>{formatCurrency(mine)}</span>
                   </span>
                 </div>
                 <Card className="rounded-[20px] px-5 py-1">
