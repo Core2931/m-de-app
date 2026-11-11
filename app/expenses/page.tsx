@@ -277,8 +277,6 @@ export default function ExpensesPage() {
             const mine = day.items.reduce((sum, item) => sum + summarizeExpense(item).myShare, 0);
             const pace = paceByDay?.get(day.date);
             const level = pace?.level ?? 0;
-            const overBy =
-              pace && pace.allowance !== null && level > 0 ? pace.spent - pace.allowance : 0;
             const differs = Math.round((mine - day.total) * 100) !== 0;
             return (
               <div key={day.date}>
@@ -287,9 +285,6 @@ export default function ExpensesPage() {
                   <span
                     className={cn("text-[13px] font-semibold tabular-nums", LEVEL_TEXT[level])}
                   >
-                    {/* Words as well as colour, so the level is not carried by
-                        hue alone. */}
-                    {overBy > 0 && <>เกิน {formatCurrency(overBy)} · </>}
                     {differs && (
                       <span className="font-medium text-sub">
                         {formatCurrency(day.total)} · ของฉัน{" "}
