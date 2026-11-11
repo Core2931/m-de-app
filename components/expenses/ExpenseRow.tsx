@@ -43,7 +43,7 @@ export default function ExpenseRow({ expense, outstanding, note }: ExpenseRowPro
           ของฉัน {formatCurrency(summary.myShare)}
         </span>
       )}
-      <span className="text-[15px] font-semibold text-expense">
+      <span className="text-[15px] font-semibold text-text">
         {formatCurrency(expense.amount)}
       </span>
     </Link>

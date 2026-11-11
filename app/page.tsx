@@ -221,7 +221,7 @@ export default function DashboardPage() {
           >
             <Avatar category={item.category} size={38} />
             <span className="flex-1 truncate text-base font-medium text-text">{item.item}</span>
-            <span className="text-base font-semibold text-expense">{formatCurrency(item.amount)}</span>
+            <span className="text-base font-semibold text-text">{formatCurrency(item.amount)}</span>
           </Link>
         ))}
 
