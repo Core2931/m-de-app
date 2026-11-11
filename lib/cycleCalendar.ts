@@ -8,6 +8,8 @@ export interface CalendarDay {
   day: number;
   /** What the day really cost us (myShare). */
   spent: number;
+  /** What the day was allowed at its start, in whole baht; null without a budget. */
+  allowance: number | null;
   level: PaceLevel;
   isToday: boolean;
 }
@@ -88,6 +90,7 @@ export function buildCycleCalendar(input: {
       date,
       day: Number(date.slice(8, 10)),
       spent,
+      allowance,
       level: allowance === null ? 0 : paceLevel(spent, allowance).level,
       isToday: date === today,
     });

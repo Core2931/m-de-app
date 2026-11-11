@@ -85,6 +85,13 @@ describe("buildCycleCalendar levels", () => {
     expect(weeks[0].cells[5]?.level).toBe(1);
   });
 
+  it("each day carries the allowance it was judged against", () => {
+    const weeks = build({ "2026-10-29": 300 }, 2900);
+    expect(weeks[0].cells[4]?.allowance).toBe(100);
+    expect(weeks[0].cells[5]?.allowance).toBe(92); // 2600 over 28 days
+    expect(build({}, null)[0].cells[4]?.allowance).toBeNull();
+  });
+
   it("a day with no spending stays level 0 even when the budget is gone", () => {
     const weeks = build({ "2026-10-29": 5000 }, 2900);
     expect(weeks[0].cells[5]?.level).toBe(0);
