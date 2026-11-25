@@ -145,6 +145,18 @@ export default function DateField({
   const wrapRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState(() => isoToDMY(value));
   const [open, setOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
+
+  // Calendar popover is ~340px tall. If there isn't room below the field (e.g. a
+  // bottom-anchored dialog) but there is more room above, open it upwards.
+  function toggleOpen() {
+    if (!open && wrapRef.current) {
+      const rect = wrapRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUp(spaceBelow < 340 && rect.top > spaceBelow);
+    }
+    setOpen((o) => !o);
+  }
 
   // Resync display when the ISO value changes from outside (e.g. edit form load),
   // but don't clobber what the user is mid-typing.
@@ -209,7 +221,7 @@ export default function DateField({
         />
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
+          onClick={toggleOpen}
           aria-label="เลือกวันที่จากปฏิทิน"
           aria-expanded={open}
           className={cn(
@@ -224,7 +236,13 @@ export default function DateField({
         </button>
 
         {open && (
-          <div className={cn("absolute top-full z-50 mt-2", align === "right" ? "right-0" : "left-0")}>
+          <div
+            className={cn(
+              "absolute z-50",
+              openUp ? "bottom-full mb-2" : "top-full mt-2",
+              align === "right" ? "right-0" : "left-0"
+            )}
+          >
             <Calendar value={value} onSelect={handleSelect} />
           </div>
         )}
