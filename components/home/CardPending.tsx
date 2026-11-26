@@ -165,7 +165,7 @@ export default function CardPending({ expenses, onChange, onReload }: CardPendin
           <div className="mx-auto w-full max-w-md px-5">
             <div
               role="status"
-              className="flex items-center justify-between gap-3 rounded-[14px] border border-border bg-card px-4 py-1 shadow-card"
+              className="flex items-center justify-between gap-3 rounded-[14px] border border-border bg-nav px-4 py-1 shadow-card"
             >
               <div className="min-w-0 py-2 text-[14px]">
                 {undo && (

@@ -13,7 +13,7 @@ export default function BottomNav() {
       <div className="mx-auto w-full max-w-md px-5">
         <div
           className="mb-5 flex rounded-[26px] bg-nav px-2 py-[10px]"
-          style={{ boxShadow: "0 12px 28px rgba(0,0,0,0.16)" }}
+          style={{ boxShadow: "var(--shadow-nav)" }}
         >
           {NAV_TABS.map(({ href, label }) => {
             const isActive = isTabActive(href, pathname);

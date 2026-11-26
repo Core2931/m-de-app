@@ -23,9 +23,9 @@ export default function Input({ label, className, id, filled, ...props }: InputP
       <input
         id={inputId}
         className={cn(
-          "w-full rounded-xl border border-border px-3 py-[11px] text-[16px] text-text outline-none",
+          "w-full rounded-xl border border-field-edge px-3 py-[11px] text-[16px] text-text outline-none",
           "placeholder:text-sub focus-edge transition-colors",
-          filled ? "bg-card" : "bg-transparent",
+          filled ? "bg-field-filled" : "bg-field",
           className
         )}
         {...props}

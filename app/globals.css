@@ -27,6 +27,14 @@
   --color-ember: var(--ember);
   --color-ember-soft: var(--ember-soft);
   --color-nav: var(--nav-bg);
+  --color-field: var(--field);
+  --color-field-filled: var(--field-filled);
+  --color-field-edge: var(--field-edge);
+  --color-chip: var(--chip);
+  --color-chip-edge: var(--chip-edge);
+  --color-chip-text: var(--chip-text);
+  --color-track: var(--track);
+  --color-track-edge: var(--track-edge);
   --color-food: var(--food);
   --color-transport: var(--transport);
   --color-life: var(--life);
@@ -82,8 +90,24 @@
      edge (focus border, selected ring). --action-fill is a whole background
      value, not just a colour, because dark fills the button with a gradient. */
   --action: #092f56;
-  --action-fill: #092f56;
+  --action-fill: var(--action);
   --action-text: #ffffff;
+  /* The primary button while it cannot be pressed. */
+  --off-fill: var(--action-fill);
+  --off-text: var(--action-text);
+  --off-opacity: 0.5;
+  /* Fields, choice chips and the track behind a segmented choice. Each has an
+     edge colour so that dark can drop the outline and rely on the fill. */
+  --field: transparent;
+  --field-filled: var(--card);
+  --field-focus: var(--card);
+  --field-edge: var(--border);
+  --chip: var(--card);
+  --chip-edge: var(--border);
+  --chip-text: var(--sub);
+  --track: transparent;
+  --track-edge: var(--border);
+  --shadow-nav: 0 12px 28px rgba(0, 0, 0, 0.16);
   /* What the border of a focused field is painted with. An image rather than
      a colour so dark can use a gradient; light is one flat stop. */
   --action-edge: linear-gradient(var(--action), var(--action));
@@ -103,36 +127,49 @@
   --other: oklch(0.88 0.05 150);
 }
 
-/* Dark theme */
+/* Dark theme: flat and neutral. Light grey means "do it" or "selected";
+   colour is left to carry meaning. */
 :root.dark {
   --bg: #2b2b2b;
-  --card: #363636;
-  --text: #f1f5f9;
-  --sub: rgba(241, 245, 249, 0.55);
-  --border: rgba(255, 255, 255, 0.12);
+  --card: #353535;
+  --text: #f5f5f5;
+  --sub: rgba(245, 245, 245, 0.62);
+  --border: rgba(255, 255, 255, 0.09);
   --accent: #10b981;
   --accent2: #22d3ee;
   --expense: #f97316;
   --accent-text: #0f172a;
   --accent-soft: rgba(16, 185, 129, 0.18);
   --ember-soft: rgba(242, 100, 25, 0.24);
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  /* No card shadow. A zero shadow, because "none" is not valid inside the
+     shadow list Tailwind builds. */
+  --shadow: 0 0 #0000;
+  --shadow-nav: 0 0 #0000;
   --link: #6aa5e0;
-  --danger: #fb8585;
+  /* Vivid on purpose: about 3.5:1 on the card, so it reads best on large
+     figures and bars. */
+  --danger: #ff453a;
   --pace-1: #facc15;
   --pace-2: #fb923c;
-  /* Dark fills the button with the cool half of the chart ramp, stopping at
-     its middle stop; edges take that same stop. */
-  --action: var(--ramp-mid);
-  --action-fill: linear-gradient(90deg, var(--ramp-from), var(--ramp-mid));
-  --action-text: #0f172a;
-  --action-edge: var(--action-fill);
-  --ramp-from: #3b7fc4;
-  --ramp-mid: #2ec4a6;
-  --ramp-to: #f5d05a;
-  --nav-bg: #363636;
-  /* Same hues as the light avatars, at one lightness that stays visible on
-     the charcoal card. */
+  --action: #e5e5e5;
+  --action-text: #171717;
+  --off-fill: #444444;
+  --off-text: #9c9c9c;
+  --off-opacity: 1;
+  /* One flat tone, so the budget and week bars carry no gradient. */
+  --ramp-from: #e5e5e5;
+  --ramp-mid: #e5e5e5;
+  --ramp-to: #e5e5e5;
+  --nav-bg: #404040;
+  --field: #414141;
+  --field-filled: #414141;
+  --field-focus: #414141;
+  --field-edge: transparent;
+  --chip: #3c3c3c;
+  --chip-edge: transparent;
+  --chip-text: #cfcfcf;
+  --track: #2f2f2f;
+  --track-edge: transparent;
   --food: oklch(0.42 0.06 40);
   --transport: oklch(0.42 0.06 230);
   --life: oklch(0.42 0.06 300);
@@ -151,14 +188,20 @@ body {
 
 /* Focused text fields. A gradient cannot be a border-color, and border-image
    ignores the radius, so the border goes transparent and two backgrounds do
-   the work: the card colour clipped to the padding box, the edge behind it
-   out to the border box. Every field in the app sits on a card surface,
-   filled or not, which is why --card is the inner colour. */
+   the work: the field colour clipped to the padding box, the edge behind it
+   out to the border box. */
 .focus-edge:focus {
   border-color: transparent;
   background:
-    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(var(--field-focus), var(--field-focus)) padding-box,
     var(--action-edge) border-box;
+}
+
+/* Unlayered so it wins over the utility that fades other disabled buttons. */
+.action-button:disabled {
+  background: var(--off-fill);
+  color: var(--off-text);
+  opacity: var(--off-opacity);
 }
 
 /* The ring round a selected category. Tailwind's ring is a box-shadow and can

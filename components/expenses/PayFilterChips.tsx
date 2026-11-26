@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { CHIP_OFF, CHIP_ON } from "@/lib/chipStyles";
 import { PAY_FILTERS, PAY_FILTER_LABEL, type PayFilter } from "@/lib/payMethods";
 
 interface PayFilterChipsProps {
@@ -21,9 +22,7 @@ export default function PayFilterChips({ value, onChange }: PayFilterChipsProps)
             aria-pressed={active}
             className={cn(
               "hit-area rounded-full border px-3 py-1.5 text-[13px] font-medium transition-transform active:scale-95",
-              active
-                ? "border-accent bg-accent-soft text-accent"
-                : "border-border bg-card text-sub"
+              active ? CHIP_ON : CHIP_OFF
             )}
           >
             {PAY_FILTER_LABEL[filter]}

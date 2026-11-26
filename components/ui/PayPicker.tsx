@@ -29,7 +29,7 @@ export default function PayPicker({ value, onChange, hint }: PayPickerProps) {
         {GROUPS.map((group) => (
           <div key={group.caption} className={cn("flex min-w-0 flex-col gap-1", group.grow)}>
             <span className="text-[11px] text-sub">{group.caption}</span>
-            <div className="flex gap-0.5 rounded-xl border border-border p-[3px]">
+            <div className="flex gap-0.5 rounded-xl border border-track-edge bg-track p-[3px]">
               {group.pays.map((pay) => {
                 const selected = pay === pickerValue(value);
                 return (
@@ -44,7 +44,7 @@ export default function PayPicker({ value, onChange, hint }: PayPickerProps) {
                     className={cn(
                       "min-h-11 flex-auto whitespace-nowrap rounded-[9px] px-[3px] text-[12.5px]",
                       selected
-                        ? "bg-accent-soft font-semibold text-text ring-[1.5px] ring-inset ring-action"
+                        ? "bg-action font-semibold text-action-text"
                         : "text-sub"
                     )}
                   >

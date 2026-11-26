@@ -8,9 +8,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const styles: Record<Variant, string> = {
-  // Solid navy in light, a blue-to-teal gradient in dark. --action-fill can be a
-  // gradient, so it is set as a whole background rather than a bg-* colour.
-  primary: "[background:var(--action-fill)] text-action-text font-semibold",
+  // Solid navy in light, light grey in dark. While disabled, .action-button in
+  // globals.css takes over.
+  primary: "action-button [background:var(--action-fill)] text-action-text font-semibold",
   ghost: "bg-transparent border border-border text-text/80",
   danger: "bg-transparent border border-danger text-danger font-semibold",
 };

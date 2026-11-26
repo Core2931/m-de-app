@@ -10,6 +10,7 @@ import {
   MAX_WAYS,
 } from "@/lib/evenSplit";
 import { formatCurrency } from "@/lib/formatters";
+import { CHIP_OFF, CHIP_ON } from "@/lib/chipStyles";
 import type { KnownPerson } from "@/lib/people";
 
 const CHIP_CAP = 6;
@@ -17,7 +18,7 @@ const PAIR_CAP = 3;
 const WAYS = [2, 3, 4];
 
 const CHIP =
-  "hit-area rounded-full border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
+  "hit-area rounded-full border border-chip-edge bg-chip px-2.5 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
 
 export interface RemarkSelection {
   start: number;
@@ -79,13 +80,9 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
     onInsert(text, range ?? { start: text.length, end: text.length });
   }
 
-  const toggle = (active: boolean, tone: "accent" | "expense") =>
+  const toggle = (active: boolean) =>
     "hit-area rounded-full border px-2.5 py-1.5 text-[12px] transition-transform active:scale-95 " +
-    (active
-      ? tone === "accent"
-        ? "border-accent font-semibold text-accent"
-        : "border-expense font-semibold text-expense"
-      : "border-border bg-card font-medium text-sub");
+    (active ? `${CHIP_ON} font-semibold` : `${CHIP_OFF} font-medium`);
 
   return (
     <div className="flex flex-col gap-2">
@@ -95,7 +92,7 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
           type="button"
           aria-pressed={!paidByThem}
           onClick={() => setPaidByThem(false)}
-          className={toggle(!paidByThem, "accent")}
+          className={toggle(!paidByThem)}
         >
           ฉันออกให้
         </button>
@@ -103,7 +100,7 @@ export default function PersonChips({ known, remark, amount, onInsert }: PersonC
           type="button"
           aria-pressed={paidByThem}
           onClick={() => setPaidByThem(true)}
-          className={toggle(paidByThem, "expense")}
+          className={toggle(paidByThem)}
         >
           เขาจ่ายให้
         </button>

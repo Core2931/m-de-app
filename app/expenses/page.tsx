@@ -14,6 +14,7 @@ import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
 import { useBudgetStore } from "@/store/budgetStore";
 import { useSettlementStore } from "@/store/settlementStore";
 import { cn } from "@/lib/utils";
+import { CHIP_OFF, CHIP_ON } from "@/lib/chipStyles";
 import { formatCurrency, formatDate, formatDateShort, todayISO } from "@/lib/formatters";
 import { cycleFor } from "@/lib/payCycle";
 import { isISODate } from "@/lib/isoDays";
@@ -215,9 +216,7 @@ export default function ExpensesPage() {
             aria-pressed={onlyOutstanding}
             className={cn(
               CHIP,
-              onlyOutstanding
-                ? "border-accent bg-accent-soft text-accent"
-                : "border-border bg-card text-sub"
+              onlyOutstanding ? CHIP_ON : CHIP_OFF
             )}
           >
             ค้างอยู่ {outstandingCount}
@@ -229,7 +228,7 @@ export default function ExpensesPage() {
         <div
           role="group"
           aria-label="เรียงรายการ"
-          className="flex overflow-hidden rounded-full border border-border bg-card text-[13px] font-medium"
+          className="flex overflow-hidden rounded-full border border-chip-edge bg-chip text-[13px] font-medium"
         >
           {(
             [
@@ -244,7 +243,7 @@ export default function ExpensesPage() {
               aria-pressed={sort === mode}
               className={cn(
                 "px-3 py-1.5",
-                sort === mode ? "bg-accent-soft font-semibold text-accent" : "text-sub"
+                sort === mode ? "bg-action font-semibold text-action-text" : "text-chip-text"
               )}
             >
               {label}

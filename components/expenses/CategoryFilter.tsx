@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { CHIP_OFF, CHIP_ON } from "@/lib/chipStyles";
 import {
   CATEGORIES,
   CATEGORY_COLOR_VAR,
@@ -35,9 +36,7 @@ export default function CategoryFilter({ selected, onChange }: CategoryFilterPro
             aria-pressed={active}
             className={cn(
               "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-transform active:scale-95",
-              active
-                ? "border-accent bg-accent-soft text-accent"
-                : "border-border bg-card text-sub"
+              active ? CHIP_ON : CHIP_OFF
             )}
           >
             <span

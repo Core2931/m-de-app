@@ -26,7 +26,7 @@ export default function QuickItems({ items, onPick }: QuickItemsProps) {
           key={entry.item}
           type="button"
           onClick={() => onPick(entry)}
-          className="hit-area rounded-full border border-border bg-card px-2.5 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95"
+          className="hit-area rounded-full border border-chip-edge bg-chip px-2.5 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95"
         >
           {entry.item}
           <span className="ml-1 text-sub">{formatCurrency(entry.amount)}</span>

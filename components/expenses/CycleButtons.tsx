@@ -10,7 +10,7 @@ interface CycleButtonsProps {
 }
 
 const CHIP =
-  "hit-area rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
+  "hit-area rounded-full border border-chip-edge bg-chip px-3 py-1.5 text-[12px] font-medium text-text/80 transition-transform active:scale-95";
 
 /**
  * Shortcuts for the date range: step back a salary cycle at a time, or jump

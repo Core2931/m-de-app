@@ -72,15 +72,15 @@ function Calendar({ value, onSelect }: CalendarProps) {
   }
 
   return (
-    <div className="w-[min(288px,calc(100vw-2.5rem))] rounded-2xl border border-border bg-card p-3 shadow-card">
+    <div className="w-[min(288px,calc(100vw-2.5rem))] rounded-2xl border border-border bg-nav p-3 shadow-card">
       <div className="mb-2 flex items-center justify-between">
-        <button type="button" onClick={() => shift(-1)} aria-label="เดือนก่อนหน้า" className="flex h-8 w-8 items-center justify-center rounded-lg text-sub transition-colors hover:bg-accent-soft hover:text-accent">
+        <button type="button" onClick={() => shift(-1)} aria-label="เดือนก่อนหน้า" className="flex h-8 w-8 items-center justify-center rounded-lg text-sub transition-colors hover:bg-chip hover:text-text">
           <Chevron dir="left" />
         </button>
         <span className="text-sm font-semibold text-text">
           {TH_MONTHS[month]} {year}
         </span>
-        <button type="button" onClick={() => shift(1)} aria-label="เดือนถัดไป" className="flex h-8 w-8 items-center justify-center rounded-lg text-sub transition-colors hover:bg-accent-soft hover:text-accent">
+        <button type="button" onClick={() => shift(1)} aria-label="เดือนถัดไป" className="flex h-8 w-8 items-center justify-center rounded-lg text-sub transition-colors hover:bg-chip hover:text-text">
           <Chevron dir="right" />
         </button>
       </div>
@@ -107,9 +107,9 @@ function Calendar({ value, onSelect }: CalendarProps) {
               className={cn(
                 "flex h-9 items-center justify-center rounded-lg text-[13px] tabular-nums transition-colors",
                 isSelected
-                  ? "bg-accent font-semibold text-accent-text"
-                  : "text-text hover:bg-accent-soft hover:text-accent",
-                !isSelected && isToday && "font-bold text-accent"
+                  ? "bg-action font-semibold text-action-text"
+                  : "text-text hover:bg-chip",
+                !isSelected && isToday && "font-bold text-link"
               )}
             >
               {d}
@@ -214,9 +214,9 @@ export default function DateField({
           onChange={(e) => handleText(e.target.value)}
           required={required}
           className={cn(
-            "w-full rounded-xl border border-border px-3 py-[11px] pr-10 text-[16px] text-text outline-none",
+            "w-full rounded-xl border border-field-edge px-3 py-[11px] pr-10 text-[16px] text-text outline-none",
             "placeholder:text-sub focus-edge transition-colors",
-            filled ? "bg-card" : "bg-transparent"
+            filled ? "bg-field-filled" : "bg-field"
           )}
         />
         <button
@@ -226,7 +226,7 @@ export default function DateField({
           aria-expanded={open}
           className={cn(
             "absolute inset-y-0 right-0 flex w-10 items-center justify-center transition-colors",
-            open ? "text-accent" : "text-sub"
+            open ? "text-text" : "text-sub"
           )}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
