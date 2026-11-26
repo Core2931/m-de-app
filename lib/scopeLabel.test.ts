@@ -62,3 +62,22 @@ describe("buildScopeLabel", () => {
     expect(parts[2]).toBe('ค้นหา "สบู่"');
   });
 });
+
+describe("buildScopeLabel กับวิธีจ่าย", () => {
+  const open = { from: "", to: "", categories: [], query: "" };
+
+  it("ต่อท้ายวิธีจ่ายเมื่อกรองอยู่", () => {
+    expect(buildScopeLabel({ ...open, pay: "cash" })).toBe("ทั้งหมด · เงินสด");
+  });
+
+  it("ทั้งหมด หรือไม่ส่ง ไม่เพิ่มอะไร", () => {
+    expect(buildScopeLabel({ ...open, pay: "all" })).toBe("ทั้งหมด");
+    expect(buildScopeLabel(open)).toBe("ทั้งหมด");
+  });
+
+  it("เรียง ช่วงวันที่ · หมวด · วิธีจ่าย · ค้นหา", () => {
+    expect(
+      buildScopeLabel({ ...open, categories: ["food"], pay: "card", query: "mrt" })
+    ).toBe('ทั้งหมด · อาหาร · บัตรเครดิต · ค้นหา "mrt"');
+  });
+});

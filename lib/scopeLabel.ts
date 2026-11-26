@@ -1,11 +1,13 @@
 import { formatDateShort } from "@/lib/formatters";
 import { CATEGORY_LABEL, type Category } from "@/lib/categories";
+import { PAY_FILTER_LABEL, type PayFilter } from "@/lib/payMethods";
 
 export interface ScopeLabelInput {
   from: string; // ISO YYYY-MM-DD, or "" for open-ended
   to: string;
   categories: Category[]; // empty means no category filter
   query: string;
+  pay?: PayFilter;
 }
 
 /**
@@ -16,7 +18,7 @@ export interface ScopeLabelInput {
  * its fourth input, all of them strings or string-ish, which is exactly the
  * shape where two of them get swapped at a call site and nothing complains.
  */
-export function buildScopeLabel({ from, to, categories, query }: ScopeLabelInput): string {
+export function buildScopeLabel({ from, to, categories, query, pay }: ScopeLabelInput): string {
   const parts: string[] = [];
 
   if (from && to) parts.push(`${formatDateShort(from)} – ${formatDateShort(to)}`);
@@ -25,6 +27,8 @@ export function buildScopeLabel({ from, to, categories, query }: ScopeLabelInput
   else parts.push("ทั้งหมด");
 
   if (categories.length > 0) parts.push(categories.map((c) => CATEGORY_LABEL[c]).join(", "));
+
+  if (pay && pay !== "all") parts.push(PAY_FILTER_LABEL[pay]);
 
   const trimmedQuery = query.trim();
   if (trimmedQuery) parts.push(`ค้นหา "${trimmedQuery}"`);
