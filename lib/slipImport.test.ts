@@ -173,6 +173,7 @@ describe("rowToNewExpense", () => {
       remark: "",
       category: "food",
       payee: "ทองใบshop",
+      pay: "bank",
     });
   });
 

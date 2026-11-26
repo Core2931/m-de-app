@@ -102,6 +102,8 @@ export function rowToNewExpense(row: SlipRow): NewExpense {
     // Splits are not entered here; a row that needs one is edited afterwards.
     remark: "",
     category: row.category,
+    // A slip is proof of a bank payment; a wrong one is fixed on the edit page.
+    pay: "bank",
     ...(payee ? { payee } : {}),
   };
 }

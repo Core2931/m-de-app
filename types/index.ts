@@ -10,6 +10,32 @@ export interface Expense {
   createdAt: string; // ISO timestamp
   /** Shop name read from a slip. Absent on hand-typed and legacy rows. */
   payee?: string;
+  /** How it was paid. Absent on rows saved before this was recorded. */
+  pay?: PayMethod;
+  /** YYYY-MM-DD the card amount was moved to the bill account. Only on card_paid. */
+  paidAt?: string;
+}
+
+/** card_due: swiped, move the money now. card_later: swiped, move it at month
+ *  end. card_paid: swiped and already moved. card_later_paid: the same, for a
+ *  month-end item; shown as card_paid, but the next one is card_later again. */
+export type PayMethod =
+  | "card_due"
+  | "card_later"
+  | "card_paid"
+  | "card_later_paid"
+  | "cash"
+  | "bank";
+
+export interface PayState {
+  pay?: PayMethod;
+  paidAt?: string;
+}
+
+export interface PayChange {
+  id: string;
+  pay: PayMethod;
+  paidAt?: string;
 }
 
 export type NewExpense = Omit<Expense, "id" | "createdAt">;

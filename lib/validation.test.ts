@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   validateBudgetInput,
   validateExpenseInput,
+  validatePayChanges,
   validateSettlementInput,
 } from "@/lib/validation";
 
@@ -185,5 +186,72 @@ describe("validateSettlementInput", () => {
     expect(validateSettlementInput({ ...valid, direction: "RECEIVED" })).toBeNull();
     expect(validateSettlementInput({ ...valid, direction: "owed_to_me" })).toBeNull();
     expect(validateSettlementInput({ ...valid, direction: undefined })).toBeNull();
+  });
+});
+
+describe("validateExpenseInput กับ pay", () => {
+  const valid = { date: "2026-11-20", item: "ข้าว", amount: 60, remark: "", category: "food" };
+
+  it("ไม่ส่ง pay หรือส่งค่าที่ไม่รู้จัก ไม่มี key pay", () => {
+    expect(validateExpenseInput(valid)).not.toHaveProperty("pay");
+    expect(validateExpenseInput({ ...valid, pay: "visa" })).not.toHaveProperty("pay");
+  });
+
+  it("โอนแล้วต้องมี paidAt ที่เป็นวันจริง", () => {
+    expect(validateExpenseInput({ ...valid, pay: "card_paid" })).toBeNull();
+    expect(validateExpenseInput({ ...valid, pay: "card_paid", paidAt: "2026-02-30" })).toBeNull();
+    expect(
+      validateExpenseInput({ ...valid, pay: "card_paid", paidAt: "2026-11-26" })
+    ).toMatchObject({ pay: "card_paid", paidAt: "2026-11-26" });
+  });
+
+  it("pay อื่นทิ้ง paidAt", () => {
+    const result = validateExpenseInput({ ...valid, pay: "cash", paidAt: "2026-11-26" });
+    expect(result).toMatchObject({ pay: "cash" });
+    expect(result).not.toHaveProperty("paidAt");
+  });
+});
+
+describe("validatePayChanges", () => {
+  const ok = { id: "a", pay: "card_paid", paidAt: "2026-11-26" };
+
+  it("รับรายการที่ถูกต้อง", () => {
+    expect(validatePayChanges({ changes: [ok, { id: "b", pay: "card_later" }] })).toEqual([
+      ok,
+      { id: "b", pay: "card_later" },
+    ]);
+  });
+
+  it("ปฏิเสธทั้งชุดเมื่อมีตัวเดียวผิด", () => {
+    for (const bad of [
+      { id: "b", pay: "cash" },
+      { id: "b", pay: "card_paid" },
+      { id: "", pay: "card_due" },
+      { id: "a", pay: "card_due" }, // duplicate id
+      null,
+    ]) {
+      expect(validatePayChanges({ changes: [ok, bad] })).toBeNull();
+    }
+  });
+
+  it("ปฏิเสธชุดว่าง ชุดเกิน 500 และ body ที่ไม่ใช่ object", () => {
+    expect(validatePayChanges({ changes: [] })).toBeNull();
+    const many = Array.from({ length: 501 }, (_, i) => ({ id: `x${i}`, pay: "card_due" }));
+    expect(validatePayChanges({ changes: many })).toBeNull();
+    expect(validatePayChanges(null)).toBeNull();
+  });
+});
+
+describe("validation กับ card_later_paid", () => {
+  it("ต้องมี paidAt ทั้งหน้าแก้ไขและแบบชุด", () => {
+    const edit = { date: "2026-11-20", item: "MRT", amount: 20, pay: "card_later_paid" };
+    expect(validateExpenseInput(edit)).toBeNull();
+    expect(validateExpenseInput({ ...edit, paidAt: "2026-11-26" })).toMatchObject({
+      pay: "card_later_paid",
+      paidAt: "2026-11-26",
+    });
+    expect(validatePayChanges({ changes: [{ id: "a", pay: "card_later_paid" }] })).toBeNull();
+    const change = { id: "a", pay: "card_later_paid", paidAt: "2026-11-26" };
+    expect(validatePayChanges({ changes: [change] })).toEqual([change]);
   });
 });

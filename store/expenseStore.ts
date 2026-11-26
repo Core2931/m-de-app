@@ -1,7 +1,8 @@
 import { create } from "zustand";
-import type { DailyTotal, Expense, NewExpense } from "@/types";
+import type { DailyTotal, Expense, NewExpense, PayChange } from "@/types";
 import { WEEK_LABELS, currentWeekDates, todayISO } from "@/lib/formatters";
 import { summarizeExpense } from "@/lib/splits";
+import { applyPayChanges } from "@/lib/payMethods";
 
 interface ExpenseState {
   expenses: Expense[];
@@ -12,6 +13,8 @@ interface ExpenseState {
   add: (input: NewExpense) => Promise<void>;
   update: (id: string, input: NewExpense) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  /** Marks card amounts as transferred, or puts them back. All or nothing. */
+  setPay: (changes: PayChange[]) => Promise<void>;
 }
 
 export const useExpenseStore = create<ExpenseState>((set, get) => ({
@@ -61,6 +64,26 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     const res = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("ลบไม่สำเร็จ");
     set({ expenses: get().expenses.filter((e) => e.id !== id) });
+  },
+
+  setPay: async (changes) => {
+    const failed = "บันทึกไม่สำเร็จ";
+    let res: Response;
+    try {
+      res = await fetch("/api/expenses/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ changes }),
+      });
+    } catch {
+      // A dropped connection carries the browser's own English message.
+      throw new Error(failed);
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(typeof data?.error === "string" ? data.error : failed);
+    }
+    set({ expenses: applyPayChanges(get().expenses, changes) });
   },
 }));
 
