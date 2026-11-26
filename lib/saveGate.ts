@@ -19,6 +19,20 @@ export function canSave(history: HistoryState, pickedPay: PayMethod | null): boo
   return history === "ready";
 }
 
+/** Where a "copy this entry" request stands. */
+export type SourceState = "none" | "found" | "waiting" | "failed" | "missing";
+
+export function sourceState(
+  asked: boolean,
+  found: boolean,
+  history: HistoryState
+): SourceState {
+  if (!asked) return "none";
+  if (found) return "found";
+  if (history === "ready") return "missing";
+  return history === "failed" ? "failed" : "waiting";
+}
+
 /** What the picker shows. Null when there is nothing to base a choice on. */
 export function shownPay(
   history: HistoryState,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSave, historyState, shownPay } from "@/lib/saveGate";
+import { canSave, historyState, shownPay, sourceState } from "@/lib/saveGate";
 import type { Expense } from "@/types";
 
 const lunchByCard: Expense = {
@@ -56,5 +56,27 @@ describe("shownPay", () => {
 
   it("โหลดเสร็จแล้วเลือกตามครั้งก่อนของชื่อนั้น", () => {
     expect(shownPay("ready", null, [lunchByCard], "ข้าวเที่ยง")).toBe("card_due");
+  });
+});
+
+describe("sourceState", () => {
+  it("ไม่ได้ขอคัดลอกรายการ ไม่ต้องรออะไร", () => {
+    expect(sourceState(false, false, "loading")).toBe("none");
+  });
+
+  it("เจอรายการต้นทางแล้วใช้ได้ทันที", () => {
+    expect(sourceState(true, true, "ready")).toBe("found");
+  });
+
+  it("ยังโหลดอยู่ ให้รอ", () => {
+    expect(sourceState(true, false, "loading")).toBe("waiting");
+  });
+
+  it("โหลดพังต้องบอกว่าพัง ไม่ใช่รอไปเรื่อยๆ", () => {
+    expect(sourceState(true, false, "failed")).toBe("failed");
+  });
+
+  it("โหลดเสร็จแล้วไม่เจอ คือไม่มีรายการนั้น", () => {
+    expect(sourceState(true, false, "ready")).toBe("missing");
   });
 });

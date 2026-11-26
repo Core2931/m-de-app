@@ -19,7 +19,7 @@ import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 import { DEFAULT_PAY, rememberedPay } from "@/lib/payMemory";
 import { choosePay, isPaidPay } from "@/lib/payMethods";
-import { canSave, historyState, shownPay } from "@/lib/saveGate";
+import { canSave, historyState, shownPay, sourceState } from "@/lib/saveGate";
 import type { PayMethod } from "@/types";
 
 const RECENT_CAP = 3;
@@ -57,11 +57,6 @@ export default function NewExpenseForm() {
   }, [isLoaded, load]);
 
   const source = sourceId ? expenses.find((e) => e.id === sourceId) : undefined;
-  // Waiting means: a source was asked for, it has not been found, and the
-  // store has not finished loading — so it may still turn up.
-  const waitingForSource = Boolean(sourceId) && !source && !isLoaded;
-  const sourceMissing = Boolean(sourceId) && !source && isLoaded;
-
   // Seeded during render rather than from an effect, matching the edit page —
   // two nearly identical forms that seed differently is how the next bug gets
   // written. Keyed on the source id so a second ?from= would re-seed, and so
@@ -102,6 +97,7 @@ export default function NewExpenseForm() {
   );
 
   const history = historyState({ isLoaded, error: loadError });
+  const copy = sourceState(Boolean(sourceId), Boolean(source), history);
   const pay = shownPay(history, pickedPay, expenses, item);
   const savable = canSave(history, pickedPay);
   // The default is also what a new name gets, so only another value shows that
@@ -207,7 +203,7 @@ export default function NewExpenseForm() {
 
   // Never render an empty form that is about to be overwritten: if the user
   // starts typing into it, the prefill lands on top and eats what they wrote.
-  if (waitingForSource) {
+  if (copy === "waiting") {
     return (
       <Card className="rounded-[22px] p-[22px]">
         <p className="text-sm text-sub">กำลังโหลด...</p>
@@ -215,10 +211,30 @@ export default function NewExpenseForm() {
     );
   }
 
+  // The same reason covers a failed load: a retry that succeeds would prefill
+  // over anything typed meanwhile, so no form is offered under this address.
+  if (copy === "failed") {
+    return (
+      <Card className="rounded-[22px] p-[22px]">
+        <p role="alert" className="text-sm text-danger">
+          โหลดรายการต้นทางไม่สำเร็จ
+        </p>
+        <div className="mt-4 flex gap-3">
+          <Button type="button" onClick={() => load()} className="flex-1">
+            โหลดใหม่
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => router.replace("/expenses/new")}>
+            กรอกเอง
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <>
       <Card className="rounded-[22px] p-[22px]">
-        {sourceMissing && (
+        {copy === "missing" && (
           <p className="mb-3 text-[13px] text-sub">
             ไม่พบรายการต้นทาง — กรอกใหม่ได้ตามปกติ
           </p>
