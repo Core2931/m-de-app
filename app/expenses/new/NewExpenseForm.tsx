@@ -19,6 +19,7 @@ import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 import { DEFAULT_PAY, rememberedPay } from "@/lib/payMemory";
 import { choosePay, isPaidPay } from "@/lib/payMethods";
+import { canSave, historyState, shownPay } from "@/lib/saveGate";
 import type { PayMethod } from "@/types";
 
 const RECENT_CAP = 3;
@@ -33,7 +34,7 @@ export default function NewExpenseForm() {
   const searchParams = useSearchParams();
   const sourceId = searchParams.get("from");
 
-  const { expenses, isLoaded, add, load } = useExpenseStore();
+  const { expenses, isLoaded, error: loadError, add, load } = useExpenseStore();
   const [date, setDate] = useState(todayISO());
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY);
@@ -100,11 +101,13 @@ export default function NewExpenseForm() {
     [expenses, isLoaded]
   );
 
-  const pay = pickedPay ?? rememberedPay(expenses, item);
+  const history = historyState({ isLoaded, error: loadError });
+  const pay = shownPay(history, pickedPay, expenses, item);
+  const savable = canSave(history, pickedPay);
   // The default is also what a new name gets, so only another value shows that
   // something was remembered.
   const payHint =
-    pickedPay === null && pay !== DEFAULT_PAY
+    pickedPay === null && pay !== null && pay !== DEFAULT_PAY
       ? `เลือกให้ตามครั้งก่อนของ “${item.trim()}”`
       : undefined;
 
@@ -147,6 +150,8 @@ export default function NewExpenseForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // The button is disabled in these cases; this covers any other way in.
+    if (!savable || pay === null) return;
     setError(null);
     setSaved(null);
     const amountNum = Number(amount);
@@ -268,8 +273,23 @@ export default function NewExpenseForm() {
               ✓ บันทึกแล้ว · {saved.item} {formatCurrency(saved.amount)}
             </p>
           )}
-          <Button type="submit" disabled={saving} className="mt-1.5 w-full">
-            {saving ? "กำลังบันทึก..." : "บันทึก"}
+          {history === "failed" && (
+            <div role="alert" className="flex items-center justify-between gap-3">
+              <p className="text-sm text-danger">
+                โหลดรายการเก่าไม่สำเร็จ เลือก “จ่ายด้วย” เองก่อนบันทึก
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => load()}
+                className="min-h-11 shrink-0 py-2.5 text-[14px]"
+              >
+                โหลดใหม่
+              </Button>
+            </div>
+          )}
+          <Button type="submit" disabled={saving || !savable} className="mt-1.5 w-full">
+            {saving ? "กำลังบันทึก..." : history === "loading" ? "กำลังโหลด..." : "บันทึก"}
           </Button>
         </form>
       </Card>
