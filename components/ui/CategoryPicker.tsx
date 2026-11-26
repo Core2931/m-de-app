@@ -1,13 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-  CATEGORIES,
-  CATEGORY_COLOR_VAR,
-  CATEGORY_INIT,
-  CATEGORY_LABEL,
-  type Category,
-} from "@/lib/categories";
+import CategoryDot from "@/components/ui/CategoryDot";
+import { CHIP_OFF, CHIP_ON } from "@/lib/chipStyles";
+import { CATEGORIES, CATEGORY_LABEL, type Category } from "@/lib/categories";
 
 interface CategoryPickerProps {
   value: Category;
@@ -16,7 +12,7 @@ interface CategoryPickerProps {
 
 export default function CategoryPicker({ value, onChange }: CategoryPickerProps) {
   return (
-    <div className="flex gap-[10px]">
+    <div className="flex flex-wrap gap-2">
       {CATEGORIES.map((cat) => {
         const selected = cat === value;
         return (
@@ -24,15 +20,14 @@ export default function CategoryPicker({ value, onChange }: CategoryPickerProps)
             key={cat}
             type="button"
             onClick={() => onChange(cat)}
-            aria-label={CATEGORY_LABEL[cat]}
             aria-pressed={selected}
             className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full text-[15px] font-semibold text-text transition-transform active:scale-95",
-              selected && "selected-ring"
+              "flex h-11 items-center gap-[7px] rounded-full border px-[13px] text-[13px] transition-transform active:scale-95",
+              selected ? `${CHIP_ON} font-semibold` : CHIP_OFF
             )}
-            style={{ background: CATEGORY_COLOR_VAR[cat] }}
           >
-            {CATEGORY_INIT[cat]}
+            <CategoryDot category={cat} />
+            {CATEGORY_LABEL[cat]}
           </button>
         );
       })}

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import Avatar from "@/components/ui/Avatar";
+import CategoryDot from "@/components/ui/CategoryDot";
 import { formatCurrency } from "@/lib/formatters";
 import type { OutstandingKind } from "@/lib/outstanding";
-import { payTag } from "@/lib/payMethods";
+import { rowMeta } from "@/lib/rowMeta";
 import { summarizeExpense } from "@/lib/splits";
 import type { Expense } from "@/types";
 
@@ -17,14 +17,14 @@ interface ExpenseRowProps {
 export default function ExpenseRow({ expense, outstanding, note }: ExpenseRowProps) {
   const summary = summarizeExpense(expense);
   const hasSplit = summary.splits.length > 0;
-  const meta = [note, expense.pay && payTag(expense.pay)].filter(Boolean).join(" · ");
+  const meta = rowMeta(expense, note);
 
   return (
     <Link
       href={`/expenses/${expense.id}`}
       className="flex items-center gap-3 py-3 transition-transform active:scale-[0.98]"
     >
-      <Avatar category={expense.category} size={34} />
+      <CategoryDot category={expense.category} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[15px] font-medium text-text">{expense.item}</span>
@@ -37,7 +37,7 @@ export default function ExpenseRow({ expense, outstanding, note }: ExpenseRowPro
             />
           )}
         </span>
-        {meta && <span className="block text-[12px] text-sub">{meta}</span>}
+        <span className="block text-[12px] text-sub">{meta}</span>
       </span>
       {summary.invalid && <span className="text-[13px] text-expense">⚠</span>}
       {hasSplit && (

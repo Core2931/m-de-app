@@ -5,15 +5,6 @@ export const CATEGORIES: Category[] = ["food", "transport", "life", "goods", "ot
 
 export const DEFAULT_CATEGORY: Category = "food";
 
-// Single Thai-character initials used inside the category avatars.
-export const CATEGORY_INIT: Record<Category, string> = {
-  food: "อาหา",
-  transport: "เดินท",
-  life: "ไลฟ์ส",
-  goods: "ของใ",
-  other: "อื่นๆ"
-};
-
 export const CATEGORY_LABEL: Record<Category, string> = {
   food: "อาหาร",
   transport: "เดินทาง",
@@ -22,7 +13,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   other: "อื่นๆ",
 };
 
-// CSS var names so avatars re-resolve their color when the theme flips.
+// CSS var names so category dots re-resolve their color when the theme flips.
 export const CATEGORY_COLOR_VAR: Record<Category, string> = {
   food: "var(--food)",
   transport: "var(--transport)",

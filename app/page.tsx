@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
-import Avatar from "@/components/ui/Avatar";
+import CategoryDot from "@/components/ui/CategoryDot";
 import Screen from "@/components/layout/Screen";
 import CycleCalendar from "@/components/home/CycleCalendar";
 import CardPending from "@/components/home/CardPending";
@@ -22,6 +22,7 @@ import { todayPace } from "@/lib/pace";
 import { dailyAverage, forecastBudget } from "@/lib/forecast";
 import { cashSpent } from "@/lib/cash";
 import { formatCurrency, todayISO } from "@/lib/formatters";
+import { CATEGORY_LABEL } from "@/lib/categories";
 import { cycleFor, daysLeftInCycle, missingHolidayYear } from "@/lib/payCycle";
 import { myShareByDate, myShareForRange, totalForRange } from "@/lib/rangeTotals";
 import { buildCycleCalendar } from "@/lib/cycleCalendar";
@@ -222,8 +223,11 @@ export default function DashboardPage() {
             href={`/expenses/${item.id}`}
             className="flex items-center gap-3 py-[10px] transition-transform active:scale-[0.98]"
           >
-            <Avatar category={item.category} size={38} />
-            <span className="flex-1 truncate text-base font-medium text-text">{item.item}</span>
+            <CategoryDot category={item.category} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-base font-medium text-text">{item.item}</span>
+              <span className="block text-[12px] text-sub">{CATEGORY_LABEL[item.category]}</span>
+            </span>
             <span className="text-base font-semibold text-text">{formatCurrency(item.amount)}</span>
           </Link>
         ))}

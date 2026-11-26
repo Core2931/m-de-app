@@ -118,13 +118,13 @@
   --ramp-mid: #0d9488;
   --ramp-to: #d99a06;
   --nav-bg: #ffffff;
-  --food: oklch(0.88 0.08 40);
-  --transport: oklch(0.88 0.06 230);
-  --life: oklch(0.88 0.06 300);
-  /* Hue 95 sits in the wide gap between food (40) and other (150) so the five
-     avatars stay tellable apart at 34px. */
-  --goods: oklch(0.88 0.07 95);
-  --other: oklch(0.88 0.05 150);
+  /* Category colours are small dots and thin bars, so they are mid-tone and
+     saturated enough to tell apart at 10px. */
+  --food: oklch(0.65 0.15 45);
+  --transport: oklch(0.65 0.13 235);
+  --life: oklch(0.62 0.15 305);
+  --goods: oklch(0.7 0.13 95);
+  --other: oklch(0.65 0.12 155);
 }
 
 /* Dark theme: flat and neutral. Light grey means "do it" or "selected";
@@ -170,11 +170,11 @@
   --chip-text: #cfcfcf;
   --track: #2f2f2f;
   --track-edge: transparent;
-  --food: oklch(0.42 0.06 40);
-  --transport: oklch(0.42 0.06 230);
-  --life: oklch(0.42 0.06 300);
-  --goods: oklch(0.42 0.05 95);
-  --other: oklch(0.42 0.05 150);
+  --food: oklch(0.72 0.13 45);
+  --transport: oklch(0.72 0.11 235);
+  --life: oklch(0.72 0.12 305);
+  --goods: oklch(0.76 0.12 95);
+  --other: oklch(0.74 0.11 155);
 }
 
 body {
@@ -202,27 +202,6 @@ body {
   background: var(--off-fill);
   color: var(--off-text);
   opacity: var(--off-opacity);
-}
-
-/* The ring round a selected category. Tailwind's ring is a box-shadow and can
-   only be one colour, so this draws it instead: a disc of the edge 4px larger
-   than the button, masked down to its outer 2px. That leaves a 2px gap, the
-   same shape as ring-2 + ring-offset-2, with whatever is behind showing
-   through rather than a painted offset colour. */
-.selected-ring {
-  position: relative;
-}
-.selected-ring::after {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  padding: 2px;
-  border-radius: 9999px;
-  background: var(--action-edge);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  pointer-events: none;
 }
 
 /* Native date/number inputs pick up the theme's control colors */
