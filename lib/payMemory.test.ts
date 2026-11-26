@@ -23,15 +23,15 @@ function row(
 }
 
 describe("rememberedPay", () => {
-  it("ชื่อใหม่ได้ บัตรต้องโอน", () => {
-    expect(rememberedPay([row("MRT", "card_later", "2026-11-01")], "แท็กซี่")).toBe("card_due");
+  it("ชื่อใหม่ได้ โอนจ่าย", () => {
+    expect(rememberedPay([row("MRT", "card_later", "2026-11-01")], "แท็กซี่")).toBe("bank");
   });
 
-  it.each(["card_later", "cash", "bank"] as const)("ล่าสุดเป็น %s ได้ค่านั้น", (pay) => {
+  it.each(["card_due", "card_later", "cash", "bank"] as const)("ล่าสุดเป็น %s ได้ค่านั้น", (pay) => {
     expect(rememberedPay([row("MRT", pay, "2026-11-01")], "MRT")).toBe(pay);
   });
 
-  it("ไม่จำ โอนแล้ว — ได้ ต้องโอน", () => {
+  it("ไม่จำ โอนแล้ว — ยังเป็นบัตร ได้ ต้องโอน ไม่ใช่ค่าเริ่มต้น", () => {
     expect(rememberedPay([row("MRT", "card_paid", "2026-11-01")], "MRT")).toBe("card_due");
   });
 
@@ -56,13 +56,13 @@ describe("rememberedPay", () => {
   it("ตัดช่องว่างหัวท้าย แต่ไม่จับคู่แบบใกล้เคียง", () => {
     const rows = [row("MRT ", "card_later", "2026-11-01")];
     expect(rememberedPay(rows, "  MRT  ")).toBe("card_later");
-    expect(rememberedPay(rows, "MRT สายสีม่วง")).toBe("card_due");
+    expect(rememberedPay(rows, "MRT สายสีม่วง")).toBe("bank");
   });
 
-  it("ชื่อว่างได้ ต้องโอน แม้ใน sheet มีแถวชื่อว่าง", () => {
+  it("ชื่อว่างได้ โอนจ่าย แม้ใน sheet มีแถวชื่อว่าง", () => {
     const rows = [row("  ", "cash", "2026-11-01")];
-    expect(rememberedPay(rows, "")).toBe("card_due");
-    expect(rememberedPay(rows, "   ")).toBe("card_due");
+    expect(rememberedPay(rows, "")).toBe("bank");
+    expect(rememberedPay(rows, "   ")).toBe("bank");
   });
 });
 

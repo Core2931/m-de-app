@@ -11,13 +11,14 @@ interface PayPickerProps {
   hint?: string;
 }
 
+// The other ways come first: they are used more often than the card.
 const GROUPS = [
-  { caption: "บัตรเครดิต", pays: CARD_PAYS, grow: "flex-[3_1_auto]" },
   {
     caption: "แบบอื่น",
     pays: PAY_METHODS.filter((p) => !isCardPay(p)),
     grow: "flex-[2_1_auto]",
   },
+  { caption: "บัตรเครดิต", pays: CARD_PAYS, grow: "flex-[3_1_auto]" },
 ];
 
 export default function PayPicker({ value, onChange, hint }: PayPickerProps) {

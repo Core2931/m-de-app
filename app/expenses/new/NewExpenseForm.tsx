@@ -17,7 +17,7 @@ import { buildFrequentItems, type FrequentItem } from "@/lib/frequentItems";
 import { buildKnownPeople } from "@/lib/people";
 import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
-import { rememberedPay } from "@/lib/payMemory";
+import { DEFAULT_PAY, rememberedPay } from "@/lib/payMemory";
 import { choosePay, isPaidPay } from "@/lib/payMethods";
 import type { PayMethod } from "@/types";
 
@@ -101,10 +101,10 @@ export default function NewExpenseForm() {
   );
 
   const pay = pickedPay ?? rememberedPay(expenses, item);
-  // "ต้องโอน" is also the fallback for a new name, so only the other values
-  // prove something was remembered.
+  // The default is also what a new name gets, so only another value shows that
+  // something was remembered.
   const payHint =
-    pickedPay === null && (pay === "card_later" || pay === "cash" || pay === "bank")
+    pickedPay === null && pay !== DEFAULT_PAY
       ? `เลือกให้ตามครั้งก่อนของ “${item.trim()}”`
       : undefined;
 

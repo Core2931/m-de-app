@@ -1,6 +1,7 @@
 import type { Expense, PayMethod } from "@/types";
 
-const DEFAULT_PAY: PayMethod = "card_due";
+/** What the picker starts on for a name with no history. */
+export const DEFAULT_PAY: PayMethod = "bank";
 
 /**
  * How this item was paid last time, matched on the exact trimmed name (the same
@@ -25,7 +26,10 @@ export function rememberedPay(expenses: Expense[], item: string): PayMethod {
     }
   }
 
-  if (!latest?.pay || latest.pay === "card_paid") return DEFAULT_PAY;
+  if (!latest?.pay) return DEFAULT_PAY;
+  // Paid was still a card purchase. Falling back to the default here would
+  // keep the next one off the card total.
+  if (latest.pay === "card_paid") return "card_due";
   // A month-end item that has since been paid is still a month-end item.
   // Picking card_later keeps the new amount on the card total.
   return latest.pay === "card_later_paid" ? "card_later" : latest.pay;
