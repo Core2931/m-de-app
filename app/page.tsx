@@ -7,6 +7,7 @@ import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import Screen from "@/components/layout/Screen";
 import CycleCalendar from "@/components/home/CycleCalendar";
+import CardPending from "@/components/home/CardPending";
 import HomeHero from "@/components/home/HomeHero";
 import {
   useExpenseStore,
@@ -29,7 +30,7 @@ const TODAY_CAP = 4;
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { expenses, isLoaded, isLoading, error, load } = useExpenseStore();
+  const { expenses, isLoaded, isLoading, error, load, setPay } = useExpenseStore();
   const {
     settlements,
     isLoaded: settlementsLoaded,
@@ -170,6 +171,8 @@ export default function DashboardPage() {
       ) : (
         <div className="mb-4 h-[300px]" />
       )}
+
+      {isLoaded && <CardPending expenses={expenses} onChange={setPay} onReload={() => load()} />}
 
       {hasOutstanding && (
         <Link href="/people" className="mb-4 block transition-transform active:scale-[0.98]">

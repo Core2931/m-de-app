@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import SplitPreview from "@/components/ui/SplitPreview";
+import PayPicker from "@/components/ui/PayPicker";
 import PersonChips, { type RemarkSelection } from "@/components/expenses/PersonChips";
 import QuickItems from "@/components/expenses/QuickItems";
 import { useExpenseStore } from "@/store/expenseStore";
@@ -16,6 +17,9 @@ import { buildFrequentItems, type FrequentItem } from "@/lib/frequentItems";
 import { buildKnownPeople } from "@/lib/people";
 import { hasPlaceholderPerson } from "@/lib/evenSplit";
 import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
+import { rememberedPay } from "@/lib/payMemory";
+import { choosePay, isPaidPay } from "@/lib/payMethods";
+import type { PayMethod } from "@/types";
 
 const RECENT_CAP = 3;
 
@@ -35,6 +39,9 @@ export default function NewExpenseForm() {
   const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY);
   const [item, setItem] = useState("");
   const [remark, setRemark] = useState("");
+  // Only a tap is stored. Until then the choice follows the item name, derived
+  // during render so it cannot drift from what is typed.
+  const [pickedPay, setPickedPay] = useState<PayMethod | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<SavedNotice | null>(null);
   const [saving, setSaving] = useState(false);
@@ -64,6 +71,7 @@ export default function NewExpenseForm() {
     setCategory(source.category);
     setItem(source.item);
     setRemark(source.remark);
+    setPickedPay(null);
     // Date is deliberately NOT copied — a duplicate is today's expense.
     setDate(todayISO());
   }
@@ -92,6 +100,14 @@ export default function NewExpenseForm() {
     [expenses, isLoaded]
   );
 
+  const pay = pickedPay ?? rememberedPay(expenses, item);
+  // "ต้องโอน" is also the fallback for a new name, so only the other values
+  // prove something was remembered.
+  const payHint =
+    pickedPay === null && (pay === "card_later" || pay === "cash" || pay === "bank")
+      ? `เลือกให้ตามครั้งก่อนของ “${item.trim()}”`
+      : undefined;
+
   /** The success banner must not outlive the entry it describes — left up
    *  while the next expense is being typed, it reads as confirmation of THAT
    *  one. Every field change clears it. */
@@ -114,6 +130,7 @@ export default function NewExpenseForm() {
 
   function applyQuickItem(entry: FrequentItem) {
     setSaved(null);
+    setPickedPay(null);
     setItem(entry.item);
     setCategory(entry.category);
     setAmount(String(entry.amount));
@@ -148,13 +165,25 @@ export default function NewExpenseForm() {
     setSaving(true);
     try {
       const trimmedItem = item.trim();
-      await add({ date, item: trimmedItem, amount: amountNum, remark: remark.trim(), category });
+      // Resolved at save time, not at tap time: the name can change after the
+      // tap, and it decides whether "โอนแล้ว" belongs to a month-end item.
+      const storedPay = choosePay(pay, rememberedPay(expenses, trimmedItem));
+      await add({
+        date,
+        item: trimmedItem,
+        amount: amountNum,
+        remark: remark.trim(),
+        category,
+        pay: storedPay,
+        ...(isPaidPay(storedPay) ? { paidAt: todayISO() } : {}),
+      });
       setSaved({ item: trimmedItem, amount: amountNum });
       // Date and category survive on purpose: entering several rows for the
       // same day, and usually the same kind, is the reason to stay here.
       setAmount("");
       setItem("");
       setRemark("");
+      setPickedPay(null);
       if (sourceId) {
         // Drop ?from= so a refresh does not re-prefill and quietly file a
         // third copy. prefilledFrom deliberately KEEPS the source id:
@@ -216,6 +245,7 @@ export default function NewExpenseForm() {
             placeholder="เช่น ข้าวเที่ยง"
             required
           />
+          <PayPicker value={pay} onChange={edit(setPickedPay)} hint={payHint} />
           <div className="flex flex-col gap-2">
             <Input
               ref={remarkRef}

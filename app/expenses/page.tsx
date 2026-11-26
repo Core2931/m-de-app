@@ -9,6 +9,7 @@ import CategoryFilter from "@/components/expenses/CategoryFilter";
 import CycleButtons from "@/components/expenses/CycleButtons";
 import ExpenseRow from "@/components/expenses/ExpenseRow";
 import PeriodSummary from "@/components/expenses/PeriodSummary";
+import PayFilterChips from "@/components/expenses/PayFilterChips";
 import { useExpenseStore, selectDailyTotals } from "@/store/expenseStore";
 import { useBudgetStore } from "@/store/budgetStore";
 import { useSettlementStore } from "@/store/settlementStore";
@@ -24,6 +25,7 @@ import { categoryTrends } from "@/lib/categoryTrend";
 import { dayPaceMap } from "@/lib/dayPace";
 import { outstandingByExpense } from "@/lib/outstanding";
 import { type Category } from "@/lib/categories";
+import { matchesPayFilter, type PayFilter } from "@/lib/payMethods";
 
 // Same colours as today's number on Home and the calendar: one meaning everywhere.
 const LEVEL_TEXT = ["text-sub", "text-pace-1", "text-pace-2", "text-danger"] as const;
@@ -44,6 +46,7 @@ export default function ExpensesPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
+  const [payFilter, setPayFilter] = useState<PayFilter>("all");
   const [query, setQuery] = useState("");
   const [onlyOutstanding, setOnlyOutstanding] = useState(false);
   const [sort, setSort] = useState<SortMode>("date");
@@ -105,12 +108,13 @@ export default function ExpensesPage() {
       if (to && e.date > to) return false;
       // Empty selection means "no category filter", not "match nothing".
       if (categories.length > 0 && !categories.includes(e.category)) return false;
+      if (!matchesPayFilter(e.pay, payFilter)) return false;
       // Last on purpose: the cheap date and category rejects run first, so the
       // string work only touches rows that already survived them.
       if (!matchesQuery(e, terms)) return false;
       return true;
     });
-  }, [expenses, from, to, categories, terms]);
+  }, [expenses, from, to, categories, payFilter, terms]);
 
   const outstandingCount = useMemo(
     () => matching.filter((e) => outstanding.has(e.id)).length,
@@ -129,15 +133,19 @@ export default function ExpensesPage() {
   );
   const period = useMemo(() => summarizePeriod(filtered), [filtered]);
   const scopeLabel = useMemo(
-    () => buildScopeLabel({ from, to, categories, query: deferredQuery }),
-    [from, to, categories, deferredQuery]
+    () => buildScopeLabel({ from, to, categories, pay: payFilter, query: deferredQuery }),
+    [from, to, categories, payFilter, deferredQuery]
   );
 
   // A day is judged against its cycle's budget using EVERYTHING spent that
   // day. With a filter on, the heading shows only part of the day, so a colour
   // earned by the whole day would sit next to the wrong number: no colour then.
   const judgeDays =
-    budgetsLoaded && categories.length === 0 && !deferredQuery.trim() && !onlyOutstanding;
+    budgetsLoaded &&
+    categories.length === 0 &&
+    payFilter === "all" &&
+    !deferredQuery.trim() &&
+    !onlyOutstanding;
   const paceByDay = useMemo(
     () =>
       judgeDays
@@ -149,7 +157,7 @@ export default function ExpensesPage() {
   // Needs the cycle's own range and no text search: a search narrows the
   // current figures but not the earlier cycle's, which would compare unlike.
   const trends = useMemo(() => {
-    if (!isLoaded || deferredQuery.trim() || onlyOutstanding) return null;
+    if (!isLoaded || deferredQuery.trim() || onlyOutstanding || payFilter !== "all") return null;
     return categoryTrends({
       expenses,
       from,
@@ -157,7 +165,7 @@ export default function ExpensesPage() {
       today: todayISO(),
       current: new Map(period.byCategory.map((c) => [c.category, c.total])),
     });
-  }, [isLoaded, expenses, from, to, period, deferredQuery, onlyOutstanding]);
+  }, [isLoaded, expenses, from, to, period, deferredQuery, onlyOutstanding, payFilter]);
 
   return (
     <Screen>
@@ -191,6 +199,10 @@ export default function ExpensesPage() {
 
       <div className="mb-3">
         <CategoryFilter selected={categories} onChange={setCategories} />
+      </div>
+
+      <div className="mb-3">
+        <PayFilterChips value={payFilter} onChange={setPayFilter} />
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">

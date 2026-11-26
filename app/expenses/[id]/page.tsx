@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import DateField from "@/components/ui/DateField";
 import CategoryPicker from "@/components/ui/CategoryPicker";
 import SplitPreview from "@/components/ui/SplitPreview";
+import PayPicker from "@/components/ui/PayPicker";
 import PersonChips, { type RemarkSelection } from "@/components/expenses/PersonChips";
 import Screen from "@/components/layout/Screen";
 import { useExpenseStore } from "@/store/expenseStore";
@@ -15,7 +16,9 @@ import { DEFAULT_CATEGORY, type Category } from "@/lib/categories";
 import { summarizeExpense } from "@/lib/splits";
 import { buildKnownPeople } from "@/lib/people";
 import { hasPlaceholderPerson } from "@/lib/evenSplit";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDateShort, todayISO } from "@/lib/formatters";
+import { choosePay, isPaidPay } from "@/lib/payMethods";
+import type { PayMethod } from "@/types";
 
 // Inline like the icons in DateField — the project has no icon library.
 function TrashIcon() {
@@ -45,6 +48,8 @@ export default function EditExpensePage() {
   const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY);
   const [item, setItem] = useState("");
   const [remark, setRemark] = useState("");
+  // No remember rule here: an old row stays unrecorded unless a choice is made.
+  const [pay, setPay] = useState<PayMethod | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [initializedId, setInitializedId] = useState<string | null>(null);
@@ -86,7 +91,11 @@ export default function EditExpensePage() {
     setCategory(expense.category);
     setItem(expense.item);
     setRemark(expense.remark);
+    setPay(expense.pay ?? null);
   }
+
+  // Still the transfer that was already recorded, not one picked just now.
+  const wasPaid = isPaidPay(expense?.pay) && isPaidPay(pay);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,7 +115,17 @@ export default function EditExpensePage() {
     }
     setSaving(true);
     try {
-      await update(params.id, { date, item: item.trim(), amount: amountNum, remark: remark.trim(), category });
+      await update(params.id, {
+        date,
+        item: item.trim(),
+        amount: amountNum,
+        remark: remark.trim(),
+        category,
+        ...(pay ? { pay } : {}),
+        ...(isPaidPay(pay)
+          ? { paidAt: (wasPaid ? expense?.paidAt : undefined) ?? todayISO() }
+          : {}),
+      });
       router.push("/expenses");
     } catch (err) {
       setError(err instanceof Error ? err.message : "แก้ไขไม่สำเร็จ");
@@ -165,6 +184,20 @@ export default function EditExpensePage() {
               <CategoryPicker value={category} onChange={setCategory} />
             </div>
             <Input label="รายการ" value={item} onChange={(e) => setItem(e.target.value)} required />
+            <div className="flex flex-col gap-1">
+              <PayPicker
+                value={pay}
+                onChange={(next) => setPay(choosePay(next, expense?.pay))}
+                hint={
+                  wasPaid && expense?.paidAt
+                    ? `โอนเมื่อ ${formatDateShort(expense.paidAt)}`
+                    : undefined
+                }
+              />
+              {wasPaid && hasValidAmount && liveAmount !== expense?.amount && (
+                <p className="text-[12px] text-expense">ยอดเปลี่ยน — ส่วนต่างต้องโอนเอง</p>
+              )}
+            </div>
             <div className="flex flex-col gap-2">
               <Input
                 ref={remarkRef}

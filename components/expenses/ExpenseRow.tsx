@@ -2,6 +2,7 @@ import Link from "next/link";
 import Avatar from "@/components/ui/Avatar";
 import { formatCurrency } from "@/lib/formatters";
 import type { OutstandingKind } from "@/lib/outstanding";
+import { payTag } from "@/lib/payMethods";
 import { summarizeExpense } from "@/lib/splits";
 import type { Expense } from "@/types";
 
@@ -16,6 +17,7 @@ interface ExpenseRowProps {
 export default function ExpenseRow({ expense, outstanding, note }: ExpenseRowProps) {
   const summary = summarizeExpense(expense);
   const hasSplit = summary.splits.length > 0;
+  const meta = [note, expense.pay && payTag(expense.pay)].filter(Boolean).join(" · ");
 
   return (
     <Link
@@ -35,7 +37,7 @@ export default function ExpenseRow({ expense, outstanding, note }: ExpenseRowPro
             />
           )}
         </span>
-        {note && <span className="block text-[12px] text-sub">{note}</span>}
+        {meta && <span className="block text-[12px] text-sub">{meta}</span>}
       </span>
       {summary.invalid && <span className="text-[13px] text-expense">⚠</span>}
       {hasSplit && (
