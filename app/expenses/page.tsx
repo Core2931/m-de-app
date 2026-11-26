@@ -27,6 +27,7 @@ import { dayPaceMap } from "@/lib/dayPace";
 import { outstandingByExpense } from "@/lib/outstanding";
 import { type Category } from "@/lib/categories";
 import { matchesPayFilter, type PayFilter } from "@/lib/payMethods";
+import { hiddenFilterCount } from "@/lib/listFilters";
 
 // Same colours as today's number on Home and the calendar: one meaning everywhere.
 const LEVEL_TEXT = ["text-sub", "text-pace-1", "text-pace-2", "text-danger"] as const;
@@ -51,6 +52,7 @@ export default function ExpensesPage() {
   const [query, setQuery] = useState("");
   const [onlyOutstanding, setOnlyOutstanding] = useState(false);
   const [sort, setSort] = useState<SortMode>("date");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // Every keystroke re-runs summarizePeriod over the survivors, which parses
   // each remark with three regexes. Deferring keeps the field itself typing at
   // full speed while the list catches up.
@@ -168,24 +170,11 @@ export default function ExpensesPage() {
     });
   }, [isLoaded, expenses, from, to, period, deferredQuery, onlyOutstanding, payFilter]);
 
+  const filterCount = hiddenFilterCount({ categories, pay: payFilter });
+
   return (
     <Screen>
       <h1 className="mb-5 text-[26px] font-bold leading-tight text-text">รายการจ่าย</h1>
-
-      <div className="mb-2 grid grid-cols-2 gap-3">
-        <DateField label="จากวันที่" value={from} onChange={setFrom} filled align="left" />
-        <DateField label="ถึงวันที่" value={to} onChange={setTo} filled align="right" />
-      </div>
-
-      <div className="mb-3">
-        <CycleButtons
-          from={from}
-          onPick={(nextFrom, nextTo) => {
-            setFrom(nextFrom);
-            setTo(nextTo);
-          }}
-        />
-      </div>
 
       <div className="mb-3">
         <Input
@@ -198,13 +187,37 @@ export default function ExpensesPage() {
         />
       </div>
 
-      <div className="mb-3">
-        <CategoryFilter selected={categories} onChange={setCategories} />
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <CycleButtons
+          from={from}
+          onPick={(nextFrom, nextTo) => {
+            setFrom(nextFrom);
+            setTo(nextTo);
+          }}
+        />
+        {/* Solid while something inside is narrowing the list, so a closed
+            panel cannot hide the fact. */}
+        <button
+          type="button"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-expanded={filtersOpen}
+          aria-controls="list-filters"
+          className={cn(CHIP, "shrink-0", filterCount > 0 ? CHIP_ON : CHIP_OFF)}
+        >
+          ตัวกรอง{filterCount > 0 ? ` ${filterCount}` : ""} {filtersOpen ? "▴" : "▾"}
+        </button>
       </div>
 
-      <div className="mb-3">
-        <PayFilterChips value={payFilter} onChange={setPayFilter} />
-      </div>
+      {filtersOpen && (
+        <div id="list-filters" className="mb-3 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <DateField label="จากวันที่" value={from} onChange={setFrom} filled align="left" />
+            <DateField label="ถึงวันที่" value={to} onChange={setTo} filled align="right" />
+          </div>
+          <CategoryFilter selected={categories} onChange={setCategories} />
+          <PayFilterChips value={payFilter} onChange={setPayFilter} />
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         {/* Hidden while nothing is open, unless it is on: a filter that is on
@@ -266,7 +279,7 @@ export default function ExpensesPage() {
       {isLoading && <p className="text-sm text-sub">กำลังโหลด...</p>}
       {error && <p className="text-sm text-danger">{error}</p>}
       {!isLoading && !error && filtered.length === 0 && (
-        <p className="text-center text-sm text-sub">ไม่มีรายการ</p>
+        <p className="text-center text-sm text-sub">ไม่มีรายการ · {scopeLabel}</p>
       )}
 
       {sort === "amount" ? (
